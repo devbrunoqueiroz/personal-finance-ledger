@@ -38,6 +38,10 @@ public final class User {
         if (this.passwordHash.isEmpty()) throw new IllegalArgumentException("Senha não pode ser vazia");
     }
 
+    public static User create(String name, String email, String passwordHash, Instant now) {
+        return new User(UserId.random(), name, email, passwordHash, now, now);
+    }
+
     public UserId id() { return id; }
     public String name() { return name; }
     public String email() { return email; }
