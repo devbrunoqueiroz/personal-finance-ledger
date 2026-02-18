@@ -25,13 +25,13 @@ public class AuthController {
         this.registerUseCase = registerUseCase;
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest req) {
         String token = loginUseCase.execute(req.email(), req.password());
         return ResponseEntity.ok(new LoginResponse(token, "Bearer", 7200));
     }
 
-    @PostMapping("/auth/register")
+    @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@RequestBody @Valid RegisterRequest req){
         String token = registerUseCase.execute(req.name(), req.email(), req.password());
         return ResponseEntity.ok(new RegisterResponse(token,"Bearer", 7200));
