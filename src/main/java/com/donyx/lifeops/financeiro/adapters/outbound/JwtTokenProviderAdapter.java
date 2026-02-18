@@ -2,7 +2,6 @@ package com.donyx.lifeops.financeiro.adapters.outbound;
 
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.domain.user.User;
-import com.donyx.lifeops.financeiro.domain.user.UserId;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -52,8 +51,8 @@ public class JwtTokenProviderAdapter  implements TokenProvider {
     }
 
     @Override
-    public String getSubject(UserId userId) {
-        return parse(userId.toString()).getSubject();
+    public String getSubject(String token) {
+        return parse(token).getSubject();
     }
 
     private Claims parse(String token) {
