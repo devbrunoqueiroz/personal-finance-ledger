@@ -1,10 +1,11 @@
 package com.donyx.lifeops.financeiro.adapters.inbound.web.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
-        @NotNull
+        @NotBlank @Email
         String email,
-        @NotNull
+        @NotBlank
         String password
 ) {}
