@@ -6,7 +6,6 @@ import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
 import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.InvalidCredentialsException;
 import com.donyx.lifeops.financeiro.domain.user.User;
 
-import java.time.Instant;
 
 public class RegisterUseCase {
 
@@ -36,7 +35,7 @@ public class RegisterUseCase {
 
         // 2) cria e persiste
         String hashedPassword = passwordHasher.hash(rawPassword);
-        User user = User.create(name, email, hashedPassword, Instant.now());
+        User user = User.create(name, email, hashedPassword);
 
         User saved = userRepository.save(user);
 
