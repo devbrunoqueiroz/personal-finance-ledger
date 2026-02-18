@@ -1,11 +1,22 @@
 package com.donyx.lifeops.financeiro.domain.user;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.time.Instant;
+
 import java.util.Collections;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserTest {
+    private UserId userId;
+    private Set<UserRole> roles;
+
+    @BeforeEach
+    void setUp(){
+        this.userId = UserId.random();
+        this.roles = Collections.singleton(UserRole.USER);
+    }
     @Test
     void shouldCreateValidUser() {
         User user = new User(
@@ -14,8 +25,6 @@ class UserTest {
             "test@email.com",
             "hash",
             null,
-            Instant.now(),
-            Instant.now(),
             UserStatus.ACTIVE,
             Collections.singleton(UserRole.USER)
         );
@@ -29,15 +38,13 @@ class UserTest {
     void shouldThrowOnInvalidEmail() {
         assertThrows(IllegalArgumentException.class, () ->
             new User(
-                UserId.random(),
+                userId,
                 "Test User",
                 "invalid",
                 "hash",
                 null,
-                Instant.now(),
-                Instant.now(),
                 UserStatus.ACTIVE,
-                Collections.singleton(UserRole.USER)
+                roles
             )
         );
     }
@@ -46,15 +53,13 @@ class UserTest {
     void shouldThrowOnNullName() {
         assertThrows(NullPointerException.class, () ->
             new User(
-                UserId.random(),
+                userId,
                 null,
                 "test@email.com",
                 "hash",
                 null,
-                Instant.now(),
-                Instant.now(),
                 UserStatus.ACTIVE,
-                Collections.singleton(UserRole.USER)
+                roles
             )
         );
     }

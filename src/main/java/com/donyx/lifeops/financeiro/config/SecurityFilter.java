@@ -12,7 +12,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityFilter {
 
     @Bean
-    SecurityFilterChain security(HttpSecurity http) throws Exception {
+    SecurityFilterChain security(HttpSecurity http) {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
