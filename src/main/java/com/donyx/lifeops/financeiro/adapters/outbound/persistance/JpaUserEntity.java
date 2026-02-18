@@ -1,6 +1,5 @@
 package com.donyx.lifeops.financeiro.adapters.outbound.persistance;
 
-import com.donyx.lifeops.financeiro.domain.user.UserId;
 import com.donyx.lifeops.financeiro.domain.user.UserRole;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import jakarta.persistence.*;
@@ -28,7 +27,7 @@ public class JpaUserEntity {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
     @Column(name = "updated_by")
-    private UserId updatedBy;
+    private UUID updatedBy;
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
     @Column(name = "updated_at", nullable = false)

@@ -16,21 +16,23 @@ public final class User {
     private  UserId updatedBy;
     private final Instant createdAt;
     private Instant updatedAt;
-    public UserStatus status;
+    private UserStatus status;
     private Set<UserRole> roles;
 
-    public User(UserId id, String name, String email, String passwordHash, Instant createdAt, Instant updatedAt) {
-        this(id, name, email, passwordHash, null, createdAt, updatedAt, UserStatus.ACTIVE, Collections.singleton(UserRole.USER));
+    public User(UserId id, String name, String email, String passwordHash) {
+        this(id, name, email, passwordHash, null, UserStatus.ACTIVE, Collections.singleton(UserRole.USER));
     }
 
-    public User(UserId id, String name, String email, String passwordHash, UserId updatedBy, Instant createdAt, Instant updatedAt, UserStatus status, Set<UserRole> roles) {
+    public User(UserId id, String name, String email, String passwordHash, UserId updatedBy, UserStatus status, Set<UserRole> roles) {
+        var now = Instant.now();
+
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name").trim();
         this.email = Objects.requireNonNull(email, "email").trim();
         this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
         this.updatedBy = updatedBy;
-        this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
-        this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
+        this.createdAt = now;
+        this.updatedAt = now;
         this.status = status == null ? UserStatus.ACTIVE    : status;
         this.roles = roles == null ? Collections.singleton(UserRole.USER) : Collections.unmodifiableSet(new HashSet<>(roles));
         if (this.name.isEmpty()) throw new IllegalArgumentException("Nome não pode ser vazio");
@@ -52,24 +54,24 @@ public final class User {
     public UserStatus status() { return status; }
     public Set<UserRole> roles() { return roles; }
 
-    public User withPasswordHash(String newHash, UserId updatedBy, Instant updatedAt) {
-        return new User(id, name, email, Objects.requireNonNull(newHash), updatedBy, createdAt, updatedAt, status, roles);
+    public User withPasswordHash(String newHash, UserId updatedBy) {
+        return new User(id, name, email, Objects.requireNonNull(newHash), updatedBy, status, roles);
     }
 
-    public User activate(UserId updatedBy, Instant updatedAt) {
-        return new User(id, name, email, passwordHash, updatedBy, createdAt, updatedAt, UserStatus.ACTIVE, roles);
+    public User activate(UserId updatedBy) {
+        return new User(id, name, email, passwordHash, updatedBy, UserStatus.ACTIVE, roles);
     }
 
-    public User block(UserId updatedBy, Instant updatedAt) {
-        return new User(id, name, email, passwordHash, updatedBy, createdAt, updatedAt, UserStatus.BLOCKED, roles);
+    public User block(UserId updatedBy) {
+        return new User(id, name, email, passwordHash, updatedBy, UserStatus.BLOCKED, roles);
     }
 
-    public User exclude(UserId updatedBy, Instant updatedAt) {
-        return new User(id, name, email, passwordHash, updatedBy, createdAt, updatedAt, UserStatus.DELETED, roles);
+    public User exclude(UserId updatedBy) {
+        return new User(id, name, email, passwordHash, updatedBy, UserStatus.DELETED, roles);
     }
 
-    public User withRoles(Set<UserRole> newRoles, UserId updatedBy, Instant updatedAt) {
-        return new User(id, name, email, passwordHash, updatedBy, createdAt, updatedAt, status, newRoles);
+    public User withRoles(Set<UserRole> newRoles, UserId updatedBy) {
+        return new User(id, name, email, passwordHash, updatedBy, status, newRoles);
     }
 
     public void setName(String name) {

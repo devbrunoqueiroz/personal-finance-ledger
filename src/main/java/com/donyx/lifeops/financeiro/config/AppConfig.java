@@ -44,9 +44,9 @@ public class AppConfig {
     @Bean
     public RegisterUseCase registerUseCase(
             UserRepository userRepository,
-            PasswordHasher passwordHasher
+            PasswordHasher passwordHasher, TokenProvider tokenProvider
     ) {
-        return new RegisterUseCase(userRepository, passwordHasher);
+        return new RegisterUseCase(userRepository, passwordHasher, tokenProvider);
     }
 
     @Bean

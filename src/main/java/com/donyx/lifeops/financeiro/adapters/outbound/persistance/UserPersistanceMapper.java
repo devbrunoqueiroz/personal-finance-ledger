@@ -3,9 +3,12 @@ package com.donyx.lifeops.financeiro.adapters.outbound.persistance;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 
-import java.time.Instant;
-
 public class UserPersistanceMapper {
+
+    private UserPersistanceMapper() {
+        /* This utility class should not be instantiated */
+    }
+
     public static JpaUserEntity toEntity(User user) {
         JpaUserEntity e = new JpaUserEntity();
         e.setId(user.id().asUuid());
@@ -23,8 +26,6 @@ public class UserPersistanceMapper {
                 e.getEmail(),
                 e.getPasswordHash(),
                 null,
-                Instant.now(),
-                Instant.now(),
                 e.getStatus(),
                 e.getRoles());
 

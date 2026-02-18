@@ -25,6 +25,6 @@ public interface TransactionRepository {
             UserId userId,
             LocalDate fromInclusive,
             LocalDate toInclusive
-    );;
+    );
 
 }
