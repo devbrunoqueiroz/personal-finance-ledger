@@ -1,4 +1,4 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistance.user;
 
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
 import com.donyx.lifeops.financeiro.domain.user.User;

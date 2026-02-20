@@ -1,5 +1,9 @@
 package com.donyx.lifeops.financeiro.adapters.outbound.persistance;
 
+import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.JpaUserEntity;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.SpringDataJpaRepository;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.UserPersistanceMapper;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.UserRepositoryAdapter;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;

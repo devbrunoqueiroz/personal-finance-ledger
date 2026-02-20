@@ -13,6 +13,20 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: financeiro
+          POSTGRES_USER: financeiro
+          POSTGRES_PASSWORD: financeiro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U financeiro -d financeiro"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,5 +42,9 @@ jobs:
       - name: Build and analyze
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Pcoverage
         env:
+          SPRING_PROFILES_ACTIVE: test
+          DB_URL: jdbc:postgresql://localhost:5432/financeiro
+          DB_USER: financeiro
+          DB_PASSWORD: financeiro
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
