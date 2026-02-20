@@ -7,7 +7,6 @@ import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,13 +15,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class JwtTokenProviderAdapterTest {
 
     private static final String SECRET =
-            "12345678901234567890123456789012"; // 32 bytes mínimo
+            "2biBnmC+Rdj1DxrMa8C7AI9Sesih67cbtNSA4I4UpwY="; // 32 bytes mínimo
 
     @Test
     @DisplayName("generateAccessToken -> token válido com subject e claims")
     void generateToken_ok() {
         JwtTokenProviderAdapter provider =
-                new JwtTokenProviderAdapter(SECRET, Duration.ofHours(2));
+                new JwtTokenProviderAdapter(SECRET, 3000);
 
         UserId id = UserId.of(UUID.randomUUID());
 
@@ -46,7 +45,7 @@ class JwtTokenProviderAdapterTest {
     @DisplayName("isValid -> false quando token inválido")
     void isValid_invalidToken_false() {
         JwtTokenProviderAdapter provider =
-                new JwtTokenProviderAdapter(SECRET, Duration.ofHours(1));
+                new JwtTokenProviderAdapter(SECRET, 3000);
 
         assertFalse(provider.isValid("token-lixo"));
     }
@@ -55,7 +54,7 @@ class JwtTokenProviderAdapterTest {
     @DisplayName("token expira conforme TTL")
     void token_expiration_respected() throws InterruptedException {
         JwtTokenProviderAdapter provider =
-                new JwtTokenProviderAdapter(SECRET, Duration.ofMillis(800));
+                new JwtTokenProviderAdapter(SECRET, 1);
 
         User user = new User(
                 UserId.of(UUID.randomUUID()),
@@ -73,7 +72,7 @@ class JwtTokenProviderAdapterTest {
         assertTrue(provider.isValid(token));
 
         // espera passar o TTL com margem
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
         assertFalse(provider.isValid(token));
     }
@@ -82,12 +81,12 @@ class JwtTokenProviderAdapterTest {
     @DisplayName("token inválido com secret diferente")
     void token_invalid_withDifferentSecret() {
         JwtTokenProviderAdapter provider1 =
-                new JwtTokenProviderAdapter(SECRET, Duration.ofHours(1));
+                new JwtTokenProviderAdapter(SECRET, 3600);
 
         JwtTokenProviderAdapter provider2 =
                 new JwtTokenProviderAdapter(
-                        "outra-chave-super-secreta-32bytes!!!!",
-                        Duration.ofHours(1));
+                        "5CxQFJ5J09onmL+h6kZqfkJ6euTtM+WpsrmAhxaXu3o=",
+                        3600);
 
         User user = new User(
                 UserId.of(UUID.randomUUID()),
@@ -105,17 +104,18 @@ class JwtTokenProviderAdapterTest {
     }
 
     @Test
-    @DisplayName("subject é userId")
+    @DisplayName("subject é email")
     void subject_isUserId() {
         JwtTokenProviderAdapter provider =
-                new JwtTokenProviderAdapter(SECRET, Duration.ofHours(1));
+                new JwtTokenProviderAdapter(SECRET, 3600);
 
         UserId id = UserId.of(UUID.randomUUID());
+        String email = "a@b.com";
 
         User user = new User(
                 id,
                 "Bruno",
-                "a@b.com",
+                email,
                 "HASH",
                 null,
                 UserStatus.ACTIVE,
@@ -126,7 +126,7 @@ class JwtTokenProviderAdapterTest {
 
         // parse direto
         String subject = provider.getSubject(token);
-        assertEquals(id.toString(), subject);
+        assertEquals(email, subject);
 
         assertNotNull(subject);
     }

@@ -2,22 +2,30 @@ package com.donyx.lifeops.financeiro.adapters.inbound.web;
 
 import com.donyx.lifeops.financeiro.application.usecases.auth.LoginUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.user.RegisterUseCase;
+import com.donyx.lifeops.financeiro.config.SecurityFilter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(AuthController.class)
+@WebMvcTest(
+        controllers = AuthController.class,
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = SecurityFilter.class
+        )
+)
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
@@ -38,13 +46,11 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(csrf())
                         .content("""
                                 {"email":"a@b.com","password":"123"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                // ajusta os nomes conforme teus records LoginResponse
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.accessToken").value("token-abc"))
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.expiresIn").value(7200));
@@ -60,13 +66,11 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(csrf())
                         .content("""
                                 {"name":"Bruno","email":"a@b.com","password":"12345678"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                // ajusta os nomes conforme teus records RegisterResponse
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.accessToken").value("token-xyz"))
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.expiresIn").value(7200));
@@ -77,10 +81,8 @@ class AuthControllerTest {
     @Test
     @DisplayName("POST /auth/login -> 400 quando request é inválido (@Valid)")
     void login_badRequest_whenInvalid() throws Exception {
-        // email inválido + password vazio (depende das anotações no LoginRequest)
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(csrf())
                         .content("""
                                 {"email":"nao-email","password":""}
                                 """))
@@ -90,10 +92,8 @@ class AuthControllerTest {
     @Test
     @DisplayName("POST /auth/register -> 400 quando request é inválido (@Valid)")
     void register_badRequest_whenInvalid() throws Exception {
-        // name vazio + email inválido + password vazio (depende das anotações no RegisterRequest)
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(csrf())
                         .content("""
                                 {"name":"","email":"x","password":""}
                                 """))

@@ -1,25 +1,78 @@
 package com.donyx.lifeops.financeiro.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.web.SecurityFilterChain;
+import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
+import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
+import com.donyx.lifeops.financeiro.domain.user.User;
+import com.donyx.lifeops.financeiro.domain.user.UserStatus;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import java.io.IOException;
 
-@Configuration
-public class SecurityFilter {
 
-    @Bean
-    SecurityFilterChain security(HttpSecurity http) {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/health").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .httpBasic(withDefaults())
+public class SecurityFilter extends OncePerRequestFilter {
+
+    private final TokenProvider tokenProvider;
+    private final UserRepository userRepository;
+
+    public SecurityFilter(TokenProvider tokenProvider, UserRepository userRepository) {
+        this.tokenProvider = tokenProvider;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            String auth = request.getHeader("Authorization");
+
+            if (auth != null && auth.startsWith("Bearer ")) {
+                String token = auth.substring(7);
+
+                try {
+                    String subject = tokenProvider.getSubject(token);
+
+                    User user = userRepository.findByEmail(subject)
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + subject));
+
+                    UserDetails userDetails = build(user);
+
+                    var authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                } catch (Exception ignored) {
+                    // TODO: Logar o erro e retornar 401 Unauthorized
+                }
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private UserDetails build(User domainUser) {
+        var authorities = domainUser.roles().stream()
+                .map(r -> "ROLE_" + r.name())
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(domainUser.email())
+                .password(domainUser.passwordHash())
+                .authorities(authorities)
+                .disabled(domainUser.status() != UserStatus.ACTIVE)
                 .build();
     }
 }
