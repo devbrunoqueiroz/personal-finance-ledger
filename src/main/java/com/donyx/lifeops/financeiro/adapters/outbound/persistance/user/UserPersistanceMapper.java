@@ -12,6 +12,7 @@ public class UserPersistanceMapper {
     public static JpaUserEntity toEntity(User user) {
         JpaUserEntity e = new JpaUserEntity();
         e.setId(user.id().asUuid());
+        e.setName(user.name());
         e.setEmail(user.email());
         e.setPasswordHash(user.passwordHash());
         e.setRoles(user.roles());
