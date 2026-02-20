@@ -17,6 +17,7 @@ public class UserPersistanceMapper {
         e.setPasswordHash(user.passwordHash());
         e.setRoles(user.roles());
         e.setStatus(user.status());
+        e.setCreatedAt(user.createdAt());
         return e;
     }
 
