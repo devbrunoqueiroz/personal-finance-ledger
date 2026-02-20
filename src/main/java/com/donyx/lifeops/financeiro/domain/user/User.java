@@ -40,6 +40,56 @@ public final class User {
         if (this.passwordHash.isEmpty()) throw new IllegalArgumentException("Senha não pode ser vazia");
     }
 
+    private User(UserId id,
+                 String name,
+                 String email,
+                 String passwordHash,
+                 UserId updatedBy,
+                 Instant createdAt,
+                 Instant updatedAt,
+                 UserStatus status,
+                 Set<UserRole> roles) {
+
+        this.id = Objects.requireNonNull(id);
+        this.name = Objects.requireNonNull(name).trim();
+        this.email = Objects.requireNonNull(email).trim();
+        this.passwordHash = Objects.requireNonNull(passwordHash);
+        this.updatedBy = updatedBy;
+
+        this.createdAt = Objects.requireNonNull(createdAt);
+        this.updatedAt = Objects.requireNonNull(updatedAt);
+
+        this.status = status == null ? UserStatus.ACTIVE : status;
+        this.roles = roles == null ? Set.of(UserRole.USER) : Set.copyOf(roles);
+
+        if (this.name.isBlank()) throw new IllegalArgumentException("Nome não pode ser vazio");
+        if (!this.email.contains("@")) throw new IllegalArgumentException("Email inválido");
+    }
+
+    public static User rehydrate(
+            UserId id,
+            String name,
+            String email,
+            String passwordHash,
+            UserId updatedBy,
+            Instant createdAt,
+            Instant updatedAt,
+            UserStatus status,
+            Set<UserRole> roles
+    ) {
+        return new User(
+                id,
+                name,
+                email,
+                passwordHash,
+                updatedBy,
+                createdAt,
+                updatedAt,
+                status,
+                roles
+        );
+    }
+
     public static User create(String name, String email, String passwordHash) {
         return new User(UserId.random(), name, email, passwordHash);
     }
