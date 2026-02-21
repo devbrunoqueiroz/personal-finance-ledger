@@ -3,6 +3,7 @@ package com.donyx.lifeops.financeiro.application.ports.transaction;
 import com.donyx.lifeops.financeiro.application.ports.common.PageRequest;
 import com.donyx.lifeops.financeiro.application.ports.common.PageResult;
 import com.donyx.lifeops.financeiro.domain.transaction.Transaction;
+import com.donyx.lifeops.financeiro.domain.transaction.TransactionId;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 
 import java.math.BigDecimal;
@@ -13,7 +14,7 @@ public interface TransactionRepository {
 
     Transaction save(Transaction transaction);
 
-    Optional<Transaction> findById(Long id);
+    Optional<Transaction> findById(TransactionId id);
 
     PageResult<Transaction> findByUser(
             UserId userId,

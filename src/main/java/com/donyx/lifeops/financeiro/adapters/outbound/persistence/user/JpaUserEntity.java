@@ -1,4 +1,4 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance.user;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistence.user;
 
 import com.donyx.lifeops.financeiro.domain.user.UserRole;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;

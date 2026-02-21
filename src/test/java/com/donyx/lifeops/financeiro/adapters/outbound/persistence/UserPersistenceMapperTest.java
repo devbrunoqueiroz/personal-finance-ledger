@@ -1,19 +1,20 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistence;
 
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.JpaUserEntity;
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.UserPersistanceMapper;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.JpaUserEntity;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.UserPersistenceMapper;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 import com.donyx.lifeops.financeiro.domain.user.UserRole;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserPersistanceMapperTest {
+class UserPersistenceMapperTest {
 
     @Test
     void toEntity_mapsAllFields() {
@@ -27,7 +28,7 @@ class UserPersistanceMapperTest {
                 Set.of(UserRole.USER)
         );
 
-        JpaUserEntity entity = UserPersistanceMapper.toEntity(user);
+        JpaUserEntity entity = UserPersistenceMapper.toEntity(user);
 
         assertEquals(user.id().asUuid(), entity.getId());
         assertEquals(user.email(), entity.getEmail());
@@ -39,6 +40,9 @@ class UserPersistanceMapperTest {
     @Test
     void toDomain_mapsAllFields() {
         UUID id = UUID.randomUUID();
+        UUID updatedBy = UUID.randomUUID();
+        Instant createdAt = Instant.parse("2026-02-21T00:00:00Z");
+        Instant updatedAt = Instant.parse("2026-02-21T01:00:00Z");
 
         JpaUserEntity e = new JpaUserEntity();
         e.setId(id);
@@ -47,8 +51,11 @@ class UserPersistanceMapperTest {
         e.setPasswordHash("HASH");
         e.setStatus(UserStatus.ACTIVE);
         e.setRoles(Set.of(UserRole.USER));
+        e.setCreatedAt(createdAt);
+        e.setUpdatedAt(updatedAt);
+        e.setUpdatedBy(updatedBy);
 
-        User user = UserPersistanceMapper.toDomain(e);
+        User user = UserPersistenceMapper.toDomain(e);
 
         assertEquals(id, user.id().asUuid());
         assertEquals("Bruno", user.name());
@@ -56,11 +63,14 @@ class UserPersistanceMapperTest {
         assertEquals("HASH", user.passwordHash());
         assertEquals(UserStatus.ACTIVE, user.status());
         assertEquals(Set.of(UserRole.USER), user.roles());
+        assertEquals(createdAt, user.createdAt());
+        assertEquals(updatedAt, user.updatedAt());
+        assertEquals(updatedBy, user.updatedBy().asUuid());
     }
 
     @Test
     void toEntity_nullUser_throws() {
         assertThrows(NullPointerException.class,
-                () -> UserPersistanceMapper.toEntity(null));
+                () -> UserPersistenceMapper.toEntity(null));
     }
 }

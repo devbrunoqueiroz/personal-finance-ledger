@@ -1,4 +1,4 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance.user;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistence.user;
 
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;

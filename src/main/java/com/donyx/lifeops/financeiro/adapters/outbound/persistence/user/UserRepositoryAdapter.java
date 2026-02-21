@@ -1,4 +1,4 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance.user;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistence.user;
 
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
 import com.donyx.lifeops.financeiro.domain.user.User;
@@ -27,9 +27,9 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public User save(User user) {
-        JpaUserEntity entity = UserPersistanceMapper.toEntity(user);
+        JpaUserEntity entity = UserPersistenceMapper.toEntity(user);
         JpaUserEntity saved = repository.save(entity);
-        return UserPersistanceMapper.toDomain(saved);
+        return UserPersistenceMapper.toDomain(saved);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findByName(String name) {
         return repository.findActiveByName(name, UserStatus.DELETED)
-                .map(UserPersistanceMapper::toDomain);
+                .map(UserPersistenceMapper::toDomain);
     }
 
     @Override
