@@ -17,8 +17,8 @@ public class Transaction {
     private final BigDecimal amount;
     private final TransactionType type;
     private TransactionStatus status;
-    LocalDate dueDate;
-    LocalDate settledAt;
+    private LocalDate dueDate;
+    private     LocalDate settledAt;
     private final Instant createdAt;
     private Instant updatedAt;
     private CategoryId categoryId;
@@ -32,6 +32,37 @@ public class Transaction {
         }
         this.type = Objects.requireNonNull(type, "TransactionType cannot be null");
         this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
+    }
+
+    public static Transaction hydrate(
+            TransactionId id,
+            UserId ownerId,
+            String description,
+            String notes,
+            BigDecimal amount,
+            TransactionType type,
+            TransactionStatus status,
+            LocalDate dueDate,
+            LocalDate settledAt,
+            CategoryId categoryId,
+            Instant createdAt,
+            Instant updatedAt
+    ) {
+        Transaction tx = new Transaction(id, ownerId, amount, type, createdAt);
+
+        if (description != null && description.trim().isEmpty()) throw new IllegalArgumentException("Description cannot be blank");
+        if (notes != null && notes.trim().isEmpty()) throw new IllegalArgumentException("Notes cannot be blank");
+        if (status == null) throw new IllegalArgumentException("TransactionStatus cannot be null");
+
+        tx.description = description;
+        tx.notes = notes;
+        tx.status = status;
+        tx.dueDate = dueDate;
+        tx.settledAt = settledAt;
+        tx.categoryId = categoryId;
+        tx.updatedAt = (updatedAt != null ? updatedAt : createdAt);
+
+        return tx;
     }
 
     public TransactionId id() { return id; }

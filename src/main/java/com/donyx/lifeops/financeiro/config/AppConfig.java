@@ -1,8 +1,8 @@
 package com.donyx.lifeops.financeiro.config;
 
 import com.donyx.lifeops.financeiro.adapters.outbound.BCryptPasswordHasherAdapter;
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.SpringDataJpaRepository;
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.UserRepositoryAdapter;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.SpringDataJpaRepository;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.UserRepositoryAdapter;
 import com.donyx.lifeops.financeiro.application.ports.user.PasswordHasher;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;

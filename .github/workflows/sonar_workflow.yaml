@@ -42,7 +42,6 @@ jobs:
       - name: Build and analyze
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Pcoverage
         env:
-          SPRING_PROFILES_ACTIVE: test
           DB_URL: jdbc:postgresql://localhost:5432/financeiro
           DB_USER: financeiro
           DB_PASSWORD: financeiro
