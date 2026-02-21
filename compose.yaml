@@ -10,18 +10,5 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  app:
-    profiles: ["app"]
-    build: .
-    container_name: financeiro-app
-    depends_on:
-      - postgres
-    environment:
-      DB_URL: jdbc:postgresql://postgres:5432/financeiro
-      DB_USER: financeiro
-      DB_PASSWORD: financeiro
-    ports:
-      - "8080:8080"
 volumes:
   postgres_data:
