@@ -1,9 +1,9 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistence;
 
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.JpaUserEntity;
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.SpringDataJpaRepository;
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.UserPersistanceMapper;
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.UserRepositoryAdapter;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.JpaUserEntity;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.SpringDataJpaRepository;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.UserPersistenceMapper;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.UserRepositoryAdapter;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
@@ -65,17 +65,17 @@ class UserRepositoryAdapterTest {
 
         when(repository.save(entityIn)).thenReturn(entitySaved);
 
-        try (MockedStatic<UserPersistanceMapper> mapper = mockStatic(UserPersistanceMapper.class)) {
-            mapper.when(() -> UserPersistanceMapper.toEntity(domainIn)).thenReturn(entityIn);
-            mapper.when(() -> UserPersistanceMapper.toDomain(entitySaved)).thenReturn(domainOut);
+        try (MockedStatic<UserPersistenceMapper> mapper = mockStatic(UserPersistenceMapper.class)) {
+            mapper.when(() -> UserPersistenceMapper.toEntity(domainIn)).thenReturn(entityIn);
+            mapper.when(() -> UserPersistenceMapper.toDomain(entitySaved)).thenReturn(domainOut);
 
             User result = adapter.save(domainIn);
 
             assertSame(domainOut, result);
 
-            mapper.verify(() -> UserPersistanceMapper.toEntity(domainIn));
+            mapper.verify(() -> UserPersistenceMapper.toEntity(domainIn));
             verify(repository).save(entityIn);
-            mapper.verify(() -> UserPersistanceMapper.toDomain(entitySaved));
+            mapper.verify(() -> UserPersistenceMapper.toDomain(entitySaved));
             verifyNoMoreInteractions(repository);
         }
     }
@@ -124,8 +124,8 @@ class UserRepositoryAdapterTest {
 
         when(repository.findActiveByName("Bruno", UserStatus.DELETED)).thenReturn(Optional.of(entity));
 
-        try (MockedStatic<UserPersistanceMapper> mapper = mockStatic(UserPersistanceMapper.class)) {
-            mapper.when(() -> UserPersistanceMapper.toDomain(entity)).thenReturn(domain);
+        try (MockedStatic<UserPersistenceMapper> mapper = mockStatic(UserPersistenceMapper.class)) {
+            mapper.when(() -> UserPersistenceMapper.toDomain(entity)).thenReturn(domain);
 
             Optional<User> result = adapter.findByName("Bruno");
 
@@ -133,7 +133,7 @@ class UserRepositoryAdapterTest {
             assertSame(domain, result.get());
 
             verify(repository).findActiveByName("Bruno", UserStatus.DELETED);
-            mapper.verify(() -> UserPersistanceMapper.toDomain(entity));
+            mapper.verify(() -> UserPersistenceMapper.toDomain(entity));
             verifyNoMoreInteractions(repository);
         }
     }

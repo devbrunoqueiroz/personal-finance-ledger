@@ -1,7 +1,7 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistence;
 
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.JpaUserEntity;
-import com.donyx.lifeops.financeiro.adapters.outbound.persistance.user.UserPersistanceMapper;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.JpaUserEntity;
+import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.UserPersistenceMapper;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 import com.donyx.lifeops.financeiro.domain.user.UserRole;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserPersistanceMapperTest {
+class UserPersistenceMapperTest {
 
     @Test
     void toEntity_mapsAllFields() {
@@ -27,7 +27,7 @@ class UserPersistanceMapperTest {
                 Set.of(UserRole.USER)
         );
 
-        JpaUserEntity entity = UserPersistanceMapper.toEntity(user);
+        JpaUserEntity entity = UserPersistenceMapper.toEntity(user);
 
         assertEquals(user.id().asUuid(), entity.getId());
         assertEquals(user.email(), entity.getEmail());
@@ -48,7 +48,7 @@ class UserPersistanceMapperTest {
         e.setStatus(UserStatus.ACTIVE);
         e.setRoles(Set.of(UserRole.USER));
 
-        User user = UserPersistanceMapper.toDomain(e);
+        User user = UserPersistenceMapper.toDomain(e);
 
         assertEquals(id, user.id().asUuid());
         assertEquals("Bruno", user.name());
@@ -61,6 +61,6 @@ class UserPersistanceMapperTest {
     @Test
     void toEntity_nullUser_throws() {
         assertThrows(NullPointerException.class,
-                () -> UserPersistanceMapper.toEntity(null));
+                () -> UserPersistenceMapper.toEntity(null));
     }
 }

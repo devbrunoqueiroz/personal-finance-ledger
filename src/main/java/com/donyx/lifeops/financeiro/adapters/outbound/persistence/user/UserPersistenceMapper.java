@@ -1,10 +1,10 @@
-package com.donyx.lifeops.financeiro.adapters.outbound.persistance.user;
+package com.donyx.lifeops.financeiro.adapters.outbound.persistence.user;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 
-public final class UserPersistanceMapper {
+public final class UserPersistenceMapper {
 
-    private UserPersistanceMapper() {
+    private UserPersistenceMapper() {
     }
 
     public static JpaUserEntity toEntity(User user) {
