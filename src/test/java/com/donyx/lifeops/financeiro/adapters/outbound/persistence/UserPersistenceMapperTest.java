@@ -8,6 +8,7 @@ import com.donyx.lifeops.financeiro.domain.user.UserRole;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -39,6 +40,9 @@ class UserPersistenceMapperTest {
     @Test
     void toDomain_mapsAllFields() {
         UUID id = UUID.randomUUID();
+        UUID updatedBy = UUID.randomUUID();
+        Instant createdAt = Instant.parse("2026-02-21T00:00:00Z");
+        Instant updatedAt = Instant.parse("2026-02-21T01:00:00Z");
 
         JpaUserEntity e = new JpaUserEntity();
         e.setId(id);
@@ -47,6 +51,9 @@ class UserPersistenceMapperTest {
         e.setPasswordHash("HASH");
         e.setStatus(UserStatus.ACTIVE);
         e.setRoles(Set.of(UserRole.USER));
+        e.setCreatedAt(createdAt);
+        e.setUpdatedAt(updatedAt);
+        e.setUpdatedBy(updatedBy);
 
         User user = UserPersistenceMapper.toDomain(e);
 
@@ -56,6 +63,9 @@ class UserPersistenceMapperTest {
         assertEquals("HASH", user.passwordHash());
         assertEquals(UserStatus.ACTIVE, user.status());
         assertEquals(Set.of(UserRole.USER), user.roles());
+        assertEquals(createdAt, user.createdAt());
+        assertEquals(updatedAt, user.updatedAt());
+        assertEquals(updatedBy, user.updatedBy().asUuid());
     }
 
     @Test
