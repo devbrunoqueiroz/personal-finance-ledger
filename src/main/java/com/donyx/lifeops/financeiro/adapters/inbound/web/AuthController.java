@@ -1,10 +1,11 @@
 package com.donyx.lifeops.financeiro.adapters.inbound.web;
 
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.LoginRequest;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.LoginResponse;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.RegisterRequest;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.RegisterResponse;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.LoginRequest;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.LoginResponse;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.RegisterRequest;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.RegisterResponse;
 import com.donyx.lifeops.financeiro.application.usecases.auth.LoginUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
 import com.donyx.lifeops.financeiro.application.usecases.user.RegisterUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest req) {
-        String token = loginUseCase.execute(req.email(), req.password());
+        LoginCommand loginCommand = new LoginCommand(req.email(), req.password());
+        String token = loginUseCase.execute(loginCommand);
         return ResponseEntity.ok(new LoginResponse(token, "Bearer", 7200));
     }
 

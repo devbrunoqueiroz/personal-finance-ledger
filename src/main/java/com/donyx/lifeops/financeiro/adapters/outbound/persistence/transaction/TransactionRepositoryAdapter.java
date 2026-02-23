@@ -62,6 +62,8 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
 
     @Override
     public BigDecimal sumAmountByUserAndPeriod(UserId userId, LocalDate fromInclusive, LocalDate toInclusive) {
-        return null;
+        return transactionJpaRepository.sumSignedSettledAmountByUserAndPeriod(
+                userId.asUuid(), fromInclusive, toInclusive
+        );
     }
 }

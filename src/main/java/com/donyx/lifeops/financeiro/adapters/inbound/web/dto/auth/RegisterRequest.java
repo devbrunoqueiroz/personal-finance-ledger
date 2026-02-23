@@ -1,4 +1,4 @@
-package com.donyx.lifeops.financeiro.adapters.inbound.web.dto;
+package com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -29,11 +29,7 @@ public class RegisterUseCase {
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new IllegalStateException("Email already in use");
         }
-        if (userRepository.existsByName(name)) { // se name = username
-            throw new IllegalStateException("Username already in use");
-        }
 
-        // 2) cria e persiste
         String hashedPassword = passwordHasher.hash(rawPassword);
         User user = User.create(name, email, hashedPassword);
 

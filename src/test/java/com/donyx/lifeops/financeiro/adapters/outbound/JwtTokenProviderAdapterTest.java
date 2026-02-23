@@ -104,7 +104,7 @@ class JwtTokenProviderAdapterTest {
     }
 
     @Test
-    @DisplayName("subject é email")
+    @DisplayName("subject é id do usuário")
     void subject_isUserId() {
         JwtTokenProviderAdapter provider =
                 new JwtTokenProviderAdapter(SECRET, 3600);
@@ -126,7 +126,7 @@ class JwtTokenProviderAdapterTest {
 
         // parse direto
         String subject = provider.getSubject(token);
-        assertEquals(email, subject);
+        assertEquals(id.toString(), subject);
 
         assertNotNull(subject);
     }

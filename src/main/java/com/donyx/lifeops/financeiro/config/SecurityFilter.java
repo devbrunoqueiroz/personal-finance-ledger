@@ -3,6 +3,7 @@ package com.donyx.lifeops.financeiro.config;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
 import com.donyx.lifeops.financeiro.domain.user.User;
+import com.donyx.lifeops.financeiro.domain.user.UserId;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -39,23 +40,19 @@ public class SecurityFilter extends OncePerRequestFilter {
             if (auth != null && auth.startsWith("Bearer ")) {
                 String token = auth.substring(7);
 
-                try {
-                    String subject = tokenProvider.getSubject(token);
+                String userId = tokenProvider.getSubject(token);
 
-                    User user = userRepository.findByEmail(subject)
-                            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + subject));
+                User user = userRepository.findById(UserId.of(userId))
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userId));
 
-                    UserDetails userDetails = build(user);
+                UserDetails userDetails = build(user);
 
-                    var authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities()
-                    );
+                var authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities()
+                );
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                } catch (Exception ignored) {
-                    // TODO: Logar o erro e retornar 401 Unauthorized
-                }
             }
         }
 
@@ -69,7 +66,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                 .toList();
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(domainUser.email())
+                .username(domainUser.id().asUuid().toString())
                 .password(domainUser.passwordHash())
                 .authorities(authorities)
                 .disabled(domainUser.status() != UserStatus.ACTIVE)

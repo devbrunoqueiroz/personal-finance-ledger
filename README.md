@@ -20,6 +20,30 @@ O objetivo do projeto é fornecer uma base sólida para registrar, consultar e e
 - Actuator básico habilitado (`health` e `info`).
 - Cobertura de testes com JUnit/Mockito e geração de relatório Jacoco.
 
+## Diagrama simples da arquitetura
+
+```text
+[Cliente HTTP]
+      |
+      v
+[Controllers REST (adapters/inbound/web)]
+      |
+      v
+[Use Cases (application/usecases)]
+      |
+      v
+[Ports (application/ports)] <--------------------+
+      |                                           |
+      v                                           |
+[Adapters Outbound (JWT, BCrypt, JPA)]            |
+      |                                           |
+      +--> [Banco PostgreSQL + Flyway]            |
+                                                  |
+[Domain (entidades e regras de negocio)] ---------+
+```
+
+Fluxo principal: entrada HTTP -> controller -> use case -> port -> adapter -> infraestrutura.
+
 ## Endpoints disponíveis hoje
 
 ### Públicos
@@ -117,3 +141,4 @@ Para gerar relatório de cobertura:
 - Melhorar tratamento de erros no filtro de segurança (retorno 401 consistente).
 - Evoluir observabilidade (métricas e tracing).
 - Endurecer configuração para produção (segredos e perfis).
+

@@ -48,6 +48,14 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return Optional.empty();
+        return repository.findActiveByEmail(email, UserStatus.DELETED)
+                .map(UserPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findById(UserId id) {
+        return repository.findById(id.asUuid())
+                .filter(e -> e.getStatus() != UserStatus.DELETED)
+                .map(UserPersistenceMapper::toDomain);
     }
 }

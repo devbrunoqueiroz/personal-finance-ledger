@@ -1,6 +1,7 @@
 package com.donyx.lifeops.financeiro.adapters.inbound.web;
 
 import com.donyx.lifeops.financeiro.application.usecases.auth.LoginUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
 import com.donyx.lifeops.financeiro.application.usecases.user.RegisterUseCase;
 import com.donyx.lifeops.financeiro.config.SecurityFilter;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +42,8 @@ class AuthControllerTest {
     @Test
     @DisplayName("POST /auth/login -> 200 e retorna LoginResponse quando credenciais são válidas")
     void login_ok() throws Exception {
-        when(loginUseCase.execute("a@b.com", "123"))
+        LoginCommand loginCommand = new LoginCommand("a@b.com", "123");
+        when(loginUseCase.execute(loginCommand))
                 .thenReturn("token-abc");
 
         mockMvc.perform(post("/auth/login")
@@ -55,7 +57,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.expiresIn").value(7200));
 
-        verify(loginUseCase).execute("a@b.com", "123");
+        verify(loginUseCase).execute(loginCommand);
     }
 
     @Test

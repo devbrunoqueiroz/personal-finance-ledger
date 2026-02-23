@@ -3,8 +3,8 @@ package com.donyx.lifeops.financeiro.application.usecases.auth;
 import com.donyx.lifeops.financeiro.application.ports.user.PasswordHasher;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
+import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
 import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.InvalidCredentialsException;
-import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.UserDeletedException;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 
@@ -22,22 +22,21 @@ public class LoginUseCase {
         this.tokenProvider = tokenProvider;
     }
 
-    public String execute(String email, String rawPassword) {
-        if (email == null || rawPassword == null) {
+    public String execute(LoginCommand command) {
+        if (command.email() == null || command.rawPassword() == null) {
             throw new InvalidCredentialsException();
         }
 
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = command.email().trim().toLowerCase();
 
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(InvalidCredentialsException::new);
 
         if (user.status() == UserStatus.DELETED) {
-            // Em produção eu retornaria InvalidCredentials pra não vazar estado
-            throw new UserDeletedException();
+            throw new InvalidCredentialsException();
         }
 
-        if (!passwordHasher.matches(rawPassword, user.passwordHash())) {
+        if (!passwordHasher.matches(command.rawPassword(), user.passwordHash())) {
             throw new InvalidCredentialsException();
         }
 

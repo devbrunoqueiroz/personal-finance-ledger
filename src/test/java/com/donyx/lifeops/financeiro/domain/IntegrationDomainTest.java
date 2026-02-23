@@ -12,7 +12,7 @@ class IntegrationDomainTest {
     @Test
     void shouldLinkTransactionToUserAndCategory() {
         User user = new User(UserId.random(), "Ana", "ana@email.com", "hash", null, UserStatus.ACTIVE, java.util.Collections.singleton(UserRole.USER));
-        Category category = new Category(CategoryId.random(), user.id(), "Food", "Groceries", CategoryType.EXPENSE, Instant.now());
+        Category category = new Category(CategoryId.random(), user.id(), "Food", "Groceries", CategoryType.EXPENSE, Instant.now(), Instant.now());
         Transaction transaction = new Transaction(TransactionId.random(), user.id(), BigDecimal.valueOf(120), TransactionType.EXPENSE, Instant.now());
         transaction.setCategoryId(category.id());
         assertEquals(user.id(), transaction.ownerId());

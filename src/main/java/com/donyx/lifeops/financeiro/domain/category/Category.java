@@ -6,21 +6,32 @@ import java.util.Objects;
 
 public class Category {
     private final CategoryId id;
-    private final UserId userId;
+    private final UserId ownerId;
     private String name;
     private String description;
     private final CategoryType type;
     private final Instant createdAt;
     private Instant updatedAt;
 
-    public Category(CategoryId id, UserId userId, String name, String description, CategoryType type, Instant createdAt) {
-        this.id = Objects.requireNonNull(id, "CategoryId cannot be null");
-        this.userId = Objects.requireNonNull(userId, "UserId cannot be null");
+    public Category(CategoryId id, UserId ownerId, String name, String description, CategoryType type,
+                    Instant createdAt, Instant updatedAt) {
+        this.id = Objects.requireNonNull(id);
+        this.ownerId = Objects.requireNonNull(ownerId);
         this.name = validateName(name);
         this.description = validateDescription(description);
-        this.type = Objects.requireNonNull(type, "CategoryType cannot be null");
-        this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
-        this.updatedAt = createdAt;
+        this.type = Objects.requireNonNull(type);
+        this.createdAt = Objects.requireNonNull(createdAt);
+        this.updatedAt = Objects.requireNonNull(updatedAt);
+    }
+
+    public static Category reconstitute(CategoryId id, UserId userId, String name, String description,
+                                        CategoryType type, Instant createdAt, Instant updatedAt) {
+        return new Category(id, userId, name, description, type, createdAt, updatedAt);
+    }
+
+    public static Category createNew(UserId userId, String name, String description, CategoryType type) {
+        Instant now = Instant.now();
+        return new Category(CategoryId.random(), userId, name, description, type, now, now);
     }
 
     private String validateName(String name) {
@@ -39,7 +50,7 @@ public class Category {
     }
 
     public CategoryId id() { return id; }
-    public UserId userId() { return userId; }
+    public UserId userId() { return ownerId; }
     public String name() { return name; }
     public String description() { return description; }
     public CategoryType type() { return type; }
