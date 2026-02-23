@@ -11,6 +11,7 @@ import com.donyx.lifeops.financeiro.domain.category.Category;
 import com.donyx.lifeops.financeiro.domain.category.CategoryId;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +41,7 @@ public class CategoryController {
         UUID userId = UUID.fromString(authentication.getName());
         var command = new CreateCategoryCommand(userId, request.name(), request.description(), request.type());
         Category category = createCategoryUseCase.execute(command);
-        return ResponseEntity.ok(
+        return ResponseEntity.status(HttpStatus.CREATED).body(
                 new CategoryResponse(
                         category.id().asUuid(),
                         category.userId().asUuid(),
