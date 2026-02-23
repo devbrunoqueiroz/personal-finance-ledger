@@ -42,14 +42,7 @@ public class CategoryController {
         var command = new CreateCategoryCommand(userId, request.name(), request.description(), request.type());
         Category category = createCategoryUseCase.execute(command);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new CategoryResponse(
-                        category.id().asUuid(),
-                        category.userId().asUuid(),
-                        category.name(),
-                        category.description(),
-                        category.type(),
-                        category.createdAt(),
-                        category.updatedAt()));
+               toResponse(category));
     }
 
     @GetMapping
@@ -58,13 +51,7 @@ public class CategoryController {
 
         List<Category> categories = listCategoriesUseCase.execute(UserId.of(userId));
         List<CategoryResponse> categoriesResponse = categories.stream().map(
-                category ->
-                        new CategoryResponse(
-                                category.id().asUuid(),
-                                category.userId().asUuid(),
-                                category.name(), category.description(),
-                                category.type(), category.createdAt(),
-                                category.updatedAt())).toList();
+                this::toResponse).toList();
 
         return ResponseEntity.ok(categoriesResponse);
     }
@@ -73,14 +60,8 @@ public class CategoryController {
     public ResponseEntity<CategoryResponse> getById(@PathVariable UUID id, Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
         Category category = getCategoryByIdUseCase.execute(CategoryId.of(id), UserId.of(userId));
-        CategoryResponse response = new CategoryResponse(
-                category.id().asUuid(),
-                category.userId().asUuid(),
-                category.name(), category.description(),
-                category.type(), category.createdAt(),
-                category.updatedAt());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(toResponse(category));
 
     }
 
@@ -89,5 +70,14 @@ public class CategoryController {
         UUID userId = UUID.fromString(authentication.getName());
         deleteCategoryUseCase.execute(CategoryId.of(id), UserId.of(userId));
         return ResponseEntity.noContent().build();
+    }
+
+    private CategoryResponse toResponse(Category category) {
+        return new CategoryResponse(
+                category.id().asUuid(),
+                category.userId().asUuid(),
+                category.name(), category.description(),
+                category.type(), category.createdAt(),
+                category.updatedAt());
     }
 }
