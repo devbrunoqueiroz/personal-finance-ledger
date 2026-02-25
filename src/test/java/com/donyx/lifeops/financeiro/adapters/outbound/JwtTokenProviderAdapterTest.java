@@ -7,6 +7,7 @@ import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,7 +33,8 @@ class JwtTokenProviderAdapterTest {
                 "HASH",
                 null,
                 UserStatus.ACTIVE,
-                Set.of(UserRole.USER)
+                Set.of(UserRole.USER),
+                Instant.now()
         );
 
         String token = provider.generateAccessToken(user);
@@ -63,7 +65,8 @@ class JwtTokenProviderAdapterTest {
                 "HASH",
                 null,
                 UserStatus.ACTIVE,
-                Set.of(UserRole.USER)
+                Set.of(UserRole.USER),
+                Instant.now()
         );
 
         String token = provider.generateAccessToken(user);
@@ -95,7 +98,8 @@ class JwtTokenProviderAdapterTest {
                 "HASH",
                 null,
                 UserStatus.ACTIVE,
-                Set.of(UserRole.USER)
+                Set.of(UserRole.USER),
+                Instant.now()
         );
 
         String token = provider1.generateAccessToken(user);
@@ -119,7 +123,8 @@ class JwtTokenProviderAdapterTest {
                 "HASH",
                 null,
                 UserStatus.ACTIVE,
-                Set.of(UserRole.USER)
+                Set.of(UserRole.USER),
+                Instant.now()
         );
 
         String token = provider.generateAccessToken(user);

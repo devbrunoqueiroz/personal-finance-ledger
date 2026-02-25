@@ -24,21 +24,20 @@ class TransactionPersistenceMapperTest {
         UUID categoryId = UUID.randomUUID();
 
         Instant createdAt = Instant.parse("2026-01-01T00:00:00Z");
-        Instant updatedAt = Instant.parse("2026-01-02T00:00:00Z");
 
         Transaction original = Transaction.hydrate(
                 TransactionId.of(id),
                 UserId.of(ownerId),
-                "Pizza",
-                "noite",
                 new BigDecimal("50.00"),
                 TransactionType.EXPENSE,
-                TransactionStatus.PENDING,
+                createdAt,
+                "Pizza",
+                "noite",
                 LocalDate.of(2026, 1, 10),
                 null,
+                TransactionStatus.PENDING,
                 CategoryId.of(categoryId),
-                createdAt,
-                updatedAt
+                false
         );
 
         JpaTransactionEntity entity =
@@ -58,7 +57,6 @@ class TransactionPersistenceMapperTest {
         assertNull(restored.settledAt());
         assertEquals(categoryId, restored.categoryId().asUuid());
         assertEquals(createdAt, restored.createdAt());
-        assertEquals(updatedAt, restored.updatedAt());
     }
 
     @Test
@@ -84,33 +82,5 @@ class TransactionPersistenceMapperTest {
         Transaction tx = TransactionPersistenceMapper.toDomain(entity);
 
         assertNull(tx.categoryId());
-    }
-
-    @Test
-    void toEntity_setsUpdatedAtWhenNull() {
-        UUID id = UUID.randomUUID();
-        UUID ownerId = UUID.randomUUID();
-
-        Instant createdAt = Instant.parse("2026-01-01T00:00:00Z");
-
-        Transaction tx = Transaction.hydrate(
-                TransactionId.of(id),
-                UserId.of(ownerId),
-                "Test",
-                null,
-                new BigDecimal("10"),
-                TransactionType.EXPENSE,
-                TransactionStatus.PENDING,
-                LocalDate.now(),
-                null,
-                null,
-                createdAt,
-                null // <- updatedAt null
-        );
-
-        JpaTransactionEntity entity =
-                TransactionPersistenceMapper.toEntity(tx);
-
-        assertEquals(createdAt, entity.getUpdatedAt());
     }
 }

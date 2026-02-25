@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class IntegrationDomainTest {
     @Test
     void shouldLinkTransactionToUserAndCategory() {
-        User user = new User(UserId.random(), "Ana", "ana@email.com", "hash", null, UserStatus.ACTIVE, java.util.Collections.singleton(UserRole.USER));
+        User user = new User(UserId.random(), "Ana", "ana@email.com", "hash", null, UserStatus.ACTIVE, java.util.Collections.singleton(UserRole.USER), Instant.now());
         Category category = new Category(CategoryId.random(), user.id(), "Food", "Groceries", CategoryType.EXPENSE, Instant.now(), Instant.now());
-        Transaction transaction = new Transaction(TransactionId.random(), user.id(), BigDecimal.valueOf(120), TransactionType.EXPENSE, Instant.now());
+        Transaction transaction = new Transaction(TransactionId.random(), user.id(), BigDecimal.valueOf(120), TransactionType.EXPENSE, Instant.now(), false);
         transaction.setCategoryId(category.id());
         assertEquals(user.id(), transaction.ownerId());
         assertEquals(category.id(), transaction.categoryId());
@@ -21,7 +21,7 @@ class IntegrationDomainTest {
 
     @Test
     void shouldUpdateTransactionFields() {
-        Transaction transaction = new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(200), TransactionType.INCOME, Instant.now());
+        Transaction transaction = new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(200), TransactionType.INCOME, Instant.now(), false);
         transaction.setDescription("Salary");
         transaction.setNotes("February");
         assertEquals("Salary", transaction.description());

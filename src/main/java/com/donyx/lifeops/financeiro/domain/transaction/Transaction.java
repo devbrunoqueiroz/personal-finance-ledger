@@ -12,21 +12,24 @@ public class Transaction {
 
     private final TransactionId id;
     private final UserId ownerId;
+    private final BigDecimal amount;           // value object (BigDecimal + moeda, opcional)
+    private final TransactionType type;   // INCOME / EXPENSE
+    private final Instant createdAt;
+
     private String description;
     private String notes;
-    private final BigDecimal amount;
-    private final TransactionType type;
-    private TransactionStatus status;
     private LocalDate dueDate;
-    private     LocalDate settledAt;
-    private final Instant createdAt;
-    private Instant updatedAt;
+    private LocalDate settledAt;
+    private TransactionStatus status;
     private CategoryId categoryId;
 
-    public Transaction(TransactionId id, UserId ownerId, BigDecimal amount, TransactionType type, Instant createdAt) {
+    private final boolean recurring; // MVP: tag apenas
+
+    public Transaction(TransactionId id, UserId ownerId, BigDecimal amount, TransactionType type, Instant createdAt, boolean recurring) {
         this.id = Objects.requireNonNull(id, "TransactionId cannot be null");
         this.ownerId = Objects.requireNonNull(ownerId, "OwnerId cannot be null");
         this.amount = Objects.requireNonNull(amount, "Amount cannot be null");
+        this.recurring = recurring;
         if (amount.signum() <= 0) {
             throw new IllegalArgumentException("Amount must be positive");
         }
@@ -37,18 +40,18 @@ public class Transaction {
     public static Transaction hydrate(
             TransactionId id,
             UserId ownerId,
-            String description,
-            String notes,
             BigDecimal amount,
             TransactionType type,
-            TransactionStatus status,
+            Instant createdAt,
+            String description,
+            String notes,
             LocalDate dueDate,
             LocalDate settledAt,
+            TransactionStatus status,
             CategoryId categoryId,
-            Instant createdAt,
-            Instant updatedAt
+            boolean recurring
     ) {
-        Transaction tx = new Transaction(id, ownerId, amount, type, createdAt);
+        Transaction tx = new Transaction(id, ownerId, amount, type, createdAt, recurring);
 
         if (description != null && description.trim().isEmpty()) throw new IllegalArgumentException("Description cannot be blank");
         if (notes != null && notes.trim().isEmpty()) throw new IllegalArgumentException("Notes cannot be blank");
@@ -60,9 +63,43 @@ public class Transaction {
         tx.dueDate = dueDate;
         tx.settledAt = settledAt;
         tx.categoryId = categoryId;
-        tx.updatedAt = (updatedAt != null ? updatedAt : createdAt);
+        return tx;
+    }
+
+    public static Transaction create(
+            UserId ownerId,
+            BigDecimal amount,
+            TransactionType type,
+            Instant now,
+            boolean recurring
+    ) {
+        Objects.requireNonNull(ownerId, "ownerId");
+        Objects.requireNonNull(amount, "amount");
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(now, "now");
+
+        if (amount.signum() <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+
+        Transaction tx = new Transaction(
+                TransactionId.random(),
+                ownerId,
+                amount,
+                type,
+                now,
+                recurring
+        );
+
+        tx.status = TransactionStatus.PENDING; // ou OPEN se for seu enum
 
         return tx;
+    }
+
+    public void settle(LocalDate date) {
+        Objects.requireNonNull(date, "settledAt");
+        this.settledAt = date;
+        this.status = TransactionStatus.COMPLETED;
     }
 
     public TransactionId id() { return id; }
@@ -75,16 +112,14 @@ public class Transaction {
     public LocalDate dueDate() { return dueDate; }
     public LocalDate settledAt() { return settledAt; }
     public Instant createdAt() { return createdAt; }
-    public Instant updatedAt() { return updatedAt; }
     public CategoryId categoryId() { return categoryId; }
-
+    public boolean recurring() { return recurring; }
     // Setters for mutable fields
     public void setDescription(String description) {
         if (description != null && description.trim().isEmpty()) {
             throw new IllegalArgumentException("Description cannot be blank");
         }
         this.description = description;
-        this.updatedAt = Instant.now();
     }
 
     public void setNotes(String notes) {
@@ -92,7 +127,6 @@ public class Transaction {
             throw new IllegalArgumentException("Notes cannot be blank");
         }
         this.notes = notes;
-        this.updatedAt = Instant.now();
     }
 
     public void setStatus(TransactionStatus status) {
@@ -100,7 +134,6 @@ public class Transaction {
             throw new IllegalArgumentException("TransactionStatus cannot be null");
         }
         this.status = status;
-        this.updatedAt = Instant.now();
     }
 
     public void setDueDate(LocalDate dueDate) {
@@ -108,7 +141,6 @@ public class Transaction {
             throw new IllegalArgumentException("DueDate cannot be before createdAt");
         }
         this.dueDate = dueDate;
-        this.updatedAt = Instant.now();
     }
 
     public void setSettledAt(LocalDate settledAt) {
@@ -116,11 +148,9 @@ public class Transaction {
             throw new IllegalArgumentException("SettledAt cannot be before createdAt");
         }
         this.settledAt = settledAt;
-        this.updatedAt = Instant.now();
     }
 
     public void setCategoryId(CategoryId categoryId) {
         this.categoryId = Objects.requireNonNull(categoryId, "CategoryId cannot be null");
-        this.updatedAt = Instant.now();
     }
 }

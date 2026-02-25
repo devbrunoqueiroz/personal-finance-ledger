@@ -1,6 +1,6 @@
 package com.donyx.lifeops.financeiro.adapters.outbound.persistence.transaction;
 
-import com.donyx.lifeops.financeiro.application.ports.common.PageRequest;
+import com.donyx.lifeops.financeiro.application.ports.common.Pagination;
 import com.donyx.lifeops.financeiro.application.ports.common.PageResult;
 import com.donyx.lifeops.financeiro.application.ports.transaction.TransactionQuery;
 import com.donyx.lifeops.financeiro.domain.transaction.Transaction;
@@ -56,16 +56,16 @@ class TransactionRepositoryAdapterTest {
         Transaction tx = Transaction.hydrate(
                 TransactionId.of(id),
                 UserId.of(ownerId),
-                "x",
-                null,
                 java.math.BigDecimal.ONE,
                 com.donyx.lifeops.financeiro.domain.transaction.TransactionType.EXPENSE,
-                com.donyx.lifeops.financeiro.domain.transaction.TransactionStatus.PENDING,
+                savedEntity.getCreatedAt(),
+                "x",
+                null,
                 java.time.LocalDate.of(2026, 1, 1),
                 null,
+                com.donyx.lifeops.financeiro.domain.transaction.TransactionStatus.PENDING,
                 null,
-                savedEntity.getCreatedAt(),
-                savedEntity.getUpdatedAt()
+                false
         );
 
         // Act
@@ -105,7 +105,7 @@ class TransactionRepositoryAdapterTest {
     }
 
     @Test
-    void findByUser_buildsPageableAndMapsPageResult() {
+    void findByUser_buildsPageableAndMapsPageResult_respectsSortFromPageRequest() {
         TransactionJpaRepository jpa = mock(TransactionJpaRepository.class);
         TransactionRepositoryAdapter adapter = new TransactionRepositoryAdapter(jpa);
 
@@ -114,29 +114,26 @@ class TransactionRepositoryAdapterTest {
 
         TransactionQuery query = mock(TransactionQuery.class);
 
-        PageRequest page = new PageRequest(
+        Pagination page = new Pagination(
                 1,
                 20,
-                new PageRequest.Sort("ignored", PageRequest.Sort.Direction.ASC)
+                List.of(new Pagination.Sort("dueDate", Pagination.Sort.Direction.ASC)) // use campo real
         );
 
         JpaTransactionEntity e = new JpaTransactionEntity();
         e.setId(UUID.randomUUID());
         e.setOwnerId(userUuid);
         e.setDescription("x");
-        e.setNotes(null);
         e.setAmount(java.math.BigDecimal.ONE);
         e.setType(TransactionType.EXPENSE);
         e.setStatus(TransactionStatus.PENDING);
         e.setDueDate(LocalDate.of(2026, 1, 1));
-        e.setSettledAt(null);
-        e.setCategoryId(null);
         e.setCreatedAt(Instant.parse("2026-01-01T00:00:00Z"));
         e.setUpdatedAt(e.getCreatedAt());
 
         Page<JpaTransactionEntity> springPage = new PageImpl<>(
                 List.of(e),
-                org.springframework.data.domain.PageRequest.of(1, 20),
+                org.springframework.data.domain.PageRequest.of(1, 20, Sort.by("dueDate").ascending()),
                 55
         );
 
@@ -149,21 +146,18 @@ class TransactionRepositoryAdapterTest {
 
         PageResult<Transaction> result = adapter.findByUser(userId, query, page);
 
-        // ---- PageResult conforme seu record
-        assertEquals(1, result.items().size());
-        assertEquals(55, result.totalItems());
+        assertEquals(1, result.content().size());
+        assertEquals(55, result.totalElements());
         assertEquals(1, result.page());
         assertEquals(20, result.size());
 
-        // ---- Pageable criado pelo adapter
         Pageable pageable = pageableCaptor.getValue();
-
         assertEquals(1, pageable.getPageNumber());
         assertEquals(20, pageable.getPageSize());
 
-        Sort.Order order = pageable.getSort().getOrderFor("createdAt");
+        Sort.Order order = pageable.getSort().getOrderFor("dueDate");
         assertNotNull(order);
-        assertEquals(Sort.Direction.DESC, order.getDirection());
+        assertEquals(Sort.Direction.ASC, order.getDirection());
     }
 
     @Test

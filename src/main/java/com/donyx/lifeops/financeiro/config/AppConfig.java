@@ -11,6 +11,8 @@ import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
 import com.donyx.lifeops.financeiro.application.usecases.auth.LoginUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.category.CreateCategoryUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.category.DeleteCategoryUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.category.GetCategoryByIdUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.category.ListCategoriesUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.user.RegisterUseCase;
 
@@ -63,5 +65,15 @@ public class AppConfig {
     @Bean
     public ListCategoriesUseCase listCategoriesUseCase(CategoryRepository categoryRepository) {
         return new ListCategoriesUseCase(categoryRepository);
+    }
+
+    @Bean
+    public GetCategoryByIdUseCase getCategoryByIdUseCase(CategoryRepository categoryRepository) {
+        return new GetCategoryByIdUseCase(categoryRepository);
+    }
+
+    @Bean
+    public DeleteCategoryUseCase deleteCategoryUseCase(CategoryRepository categoryRepository) {
+        return new DeleteCategoryUseCase(categoryRepository);
     }
 }

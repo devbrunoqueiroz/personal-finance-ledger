@@ -75,7 +75,6 @@ class SecurityFilterTest {
                 "HASH",
                 null,
                 now,
-                now,
                 UserStatus.ACTIVE,
                 Set.of(UserRole.USER)
         );

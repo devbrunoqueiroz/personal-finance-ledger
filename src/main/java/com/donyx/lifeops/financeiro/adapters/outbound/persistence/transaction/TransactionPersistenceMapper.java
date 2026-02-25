@@ -17,16 +17,16 @@ public class TransactionPersistenceMapper {
         return Transaction.hydrate(
                 TransactionId.of(entity.getId()),
                 UserId.of(entity.getOwnerId()),
-                entity.getDescription(),
-                entity.getNotes(),
                 entity.getAmount(),
                 entity.getType(),
-                entity.getStatus(),
+                entity.getCreatedAt(),
+                entity.getDescription(),
+                entity.getNotes(),
                 entity.getDueDate(),
                 entity.getSettledAt(),
+                entity.getStatus(),
                 entity.getCategoryId() != null ? CategoryId.of(entity.getCategoryId()) : null,
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.isRecurring()
         );
     }
 
@@ -36,20 +36,16 @@ public class TransactionPersistenceMapper {
         JpaTransactionEntity entity = new JpaTransactionEntity();
         entity.setId(transaction.id().asUuid());
         entity.setOwnerId(transaction.ownerId().asUuid());
-
         entity.setDescription(transaction.description());
         entity.setNotes(transaction.notes());
         entity.setAmount(transaction.amount());
         entity.setType(transaction.type());
         entity.setStatus(transaction.status());
-
         entity.setDueDate(transaction.dueDate());
         entity.setSettledAt(transaction.settledAt());
-
         entity.setCategoryId(transaction.categoryId() != null ? transaction.categoryId().asUuid() : null);
-
         entity.setCreatedAt(transaction.createdAt());
-        entity.setUpdatedAt(transaction.updatedAt() != null ? transaction.updatedAt() : transaction.createdAt());
+        entity.setRecurring(transaction.recurring());
 
         return entity;
     }

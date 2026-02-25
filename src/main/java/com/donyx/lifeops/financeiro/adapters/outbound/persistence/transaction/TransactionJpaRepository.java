@@ -26,4 +26,6 @@ public interface TransactionJpaRepository extends JpaRepository<JpaTransactionEn
             @Param("fromInclusive") LocalDate fromInclusive,
             @Param("toInclusive") LocalDate toInclusive
     );
+
+
 }

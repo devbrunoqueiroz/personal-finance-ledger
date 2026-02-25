@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TransactionTest {
     @Test
     void shouldCreateValidTransaction() {
-        Transaction t = new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(100), TransactionType.INCOME, Instant.now());
+        Transaction t = new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(100), TransactionType.INCOME, Instant.now(), false);
         assertEquals(BigDecimal.valueOf(100), t.amount());
         assertEquals(TransactionType.INCOME, t.type());
     }
@@ -18,13 +18,13 @@ class TransactionTest {
     @Test
     void shouldThrowOnNegativeAmount() {
         assertThrows(IllegalArgumentException.class, () ->
-            new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(-10), TransactionType.EXPENSE, Instant.now())
+            new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(-10), TransactionType.EXPENSE, Instant.now(), false)
         );
     }
 
     @Test
     void shouldSetCategoryId() {
-        Transaction t = new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(50), TransactionType.EXPENSE, Instant.now());
+        Transaction t = new Transaction(TransactionId.random(), UserId.random(), BigDecimal.valueOf(50), TransactionType.EXPENSE, Instant.now(), false);
         CategoryId catId = CategoryId.random();
         t.setCategoryId(catId);
         assertEquals(catId, t.categoryId());

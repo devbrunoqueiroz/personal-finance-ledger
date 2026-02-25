@@ -7,7 +7,6 @@ import com.donyx.lifeops.financeiro.domain.user.UserId;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public class CategoryRepositoryAdapter implements CategoryRepository {
 
@@ -43,7 +42,10 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
 
     @Override
     public void deleteByIdAndOwnerId(CategoryId id, UserId ownerId) {
-        repository.deleteByIdAndOwnerId(id.asUuid(), ownerId.asUuid());
+        long deleted = repository.deleteByIdAndOwnerId(id.asUuid(), ownerId.asUuid());
+        if (deleted == 0) {
+            throw new RuntimeException("Category not found or does not belong to the user");
+        }
     }
 
     @Override
