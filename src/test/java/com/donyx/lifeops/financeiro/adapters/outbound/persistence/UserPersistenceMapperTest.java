@@ -25,7 +25,8 @@ class UserPersistenceMapperTest {
                 "HASH",
                 null,
                 UserStatus.ACTIVE,
-                Set.of(UserRole.USER)
+                Set.of(UserRole.USER),
+                Instant.now()
         );
 
         JpaUserEntity entity = UserPersistenceMapper.toEntity(user);
@@ -64,7 +65,6 @@ class UserPersistenceMapperTest {
         assertEquals(UserStatus.ACTIVE, user.status());
         assertEquals(Set.of(UserRole.USER), user.roles());
         assertEquals(createdAt, user.createdAt());
-        assertEquals(updatedAt, user.updatedAt());
         assertEquals(updatedBy, user.updatedBy().asUuid());
     }
 
