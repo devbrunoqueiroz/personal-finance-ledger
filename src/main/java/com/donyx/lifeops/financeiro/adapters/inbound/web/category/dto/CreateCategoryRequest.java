@@ -1,4 +1,4 @@
-package com.donyx.lifeops.financeiro.adapters.inbound.web.dto.category;
+package com.donyx.lifeops.financeiro.adapters.inbound.web.category.dto;
 
 import com.donyx.lifeops.financeiro.domain.category.CategoryType;
 import jakarta.validation.constraints.NotBlank;

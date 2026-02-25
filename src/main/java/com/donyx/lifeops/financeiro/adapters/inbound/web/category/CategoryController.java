@@ -1,7 +1,7 @@
-package com.donyx.lifeops.financeiro.adapters.inbound.web;
+package com.donyx.lifeops.financeiro.adapters.inbound.web.category;
 
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.category.CategoryResponse;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.category.CreateCategoryRequest;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.category.dto.CategoryResponse;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.category.dto.CreateCategoryRequest;
 import com.donyx.lifeops.financeiro.application.usecases.category.CreateCategoryUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.category.DeleteCategoryUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.category.GetCategoryByIdUseCase;

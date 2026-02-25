@@ -1,4 +1,4 @@
-package com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth;
+package com.donyx.lifeops.financeiro.adapters.inbound.web.auth.dto;
 
 public record RegisterResponse(
         String accessToken,

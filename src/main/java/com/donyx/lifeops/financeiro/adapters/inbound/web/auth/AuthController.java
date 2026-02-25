@@ -1,9 +1,9 @@
-package com.donyx.lifeops.financeiro.adapters.inbound.web;
+package com.donyx.lifeops.financeiro.adapters.inbound.web.auth;
 
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.LoginRequest;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.LoginResponse;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.RegisterRequest;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.dto.auth.RegisterResponse;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.auth.dto.LoginRequest;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.auth.dto.LoginResponse;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.auth.dto.RegisterRequest;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.auth.dto.RegisterResponse;
 import com.donyx.lifeops.financeiro.application.usecases.auth.LoginUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
 import com.donyx.lifeops.financeiro.application.usecases.user.RegisterUseCase;

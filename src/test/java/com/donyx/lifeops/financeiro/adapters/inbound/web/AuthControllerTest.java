@@ -1,5 +1,6 @@
 package com.donyx.lifeops.financeiro.adapters.inbound.web;
 
+import com.donyx.lifeops.financeiro.adapters.inbound.web.auth.AuthController;
 import com.donyx.lifeops.financeiro.application.usecases.auth.LoginUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
 import com.donyx.lifeops.financeiro.application.usecases.user.RegisterUseCase;
