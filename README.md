@@ -1,24 +1,34 @@
 ﻿# personal-finance-ledger
 
-API backend para gerenciamento de finanças pessoais.
+API backend para gerenciamento de **finanças pessoais**, incluindo autenticação, categorias e transações.
 
-O objetivo do projeto é fornecer uma base sólida para registrar, consultar e evoluir o controle financeiro pessoal (receitas, despesas, categorias, autenticação e regras de domínio), com foco em arquitetura limpa e testabilidade.
+---
 
-## O que já existe no projeto
+## Status atual (verificado em 26/02/2026)
 
-- API REST em Java 21 com Spring Boot 4.
-- Arquitetura em camadas com separação entre:
-  - `domain`
-  - `application` (ports/use cases)
-  - `adapters` (inbound/outbound)
-- Autenticação com JWT.
-- Segurança stateless com Spring Security.
-- Cadastro e login de usuário implementados.
-- Persistência com Spring Data JPA + PostgreSQL.
-- Migrações versionadas com Flyway.
-- Documentação de API com OpenAPI/Swagger habilitada.
-- Actuator básico habilitado (`health` e `info`).
-- Cobertura de testes com JUnit/Mockito e geração de relatório Jacoco.
+- Stack principal: **Java 21 + Spring Boot 4.0.2**
+- Arquitetura em camadas: `domain`, `application`, `adapters` (Ports & Use Cases)
+- Banco de dados: PostgreSQL + Flyway
+  - `V1__users`
+  - `V2__categories`
+  - `V3__transactions`
+- Segurança: JWT + Spring Security (stateless)
+- OpenAPI/Swagger habilitado
+- Actuator expõe:
+  - `/actuator/health`
+  - `/actuator/info`
+  (Atualmente requer autenticação)
+
+### Testes
+
+Resultado de `.\mvnw.cmd test` em 26/02/2026:
+
+- **101 testes executados**
+- **0 falhas**
+- **0 erros**
+- **0 ignorados**
+
+---
 
 ## Diagrama simples da arquitetura
 
@@ -44,101 +54,131 @@ O objetivo do projeto é fornecer uma base sólida para registrar, consultar e e
 
 Fluxo principal: entrada HTTP -> controller -> use case -> port -> adapter -> infraestrutura.
 
-## Endpoints disponíveis hoje
+## Endpoints implementados
 
 ### Públicos
 
-- `POST /auth/register` - registra usuário e retorna token.
-- `POST /auth/login` - autentica usuário e retorna token.
-- `GET /v3/api-docs/**` e `GET /swagger-ui/**` - documentação.
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /v3/api-docs/**`
+- `GET /swagger-ui/**`
 
-### Protegidos
+### Protegidos (Bearer Token)
 
-- Rotas fora de `/auth/**` e docs exigem token Bearer.
+#### Categorias
 
-## Banco de dados e migrações
+- `POST /categories`
+- `GET /categories`
+- `GET /categories/{id}`
+- `DELETE /categories/{id}`
 
-Atualmente existem migrações para:
+#### Transações
 
-- `users`
-- `categories`
-- `transactions`
+- `POST /transactions`
+- `GET /transactions`
+- `PATCH /transactions/{id}`
+- `POST /transactions/{id}/settle`
+- `DELETE /transactions/{id}`
 
-Arquivos em `src/main/resources/db/migration`.
+---
 
-## Estado atual de funcionalidades
+## Autenticação (fluxo rápido)
 
-- Autenticação e usuários: funcional.
-- Módulo de transações: estrutura de domínio/persistência existente, controller/use case ainda em evolução.
-- Há testes cobrindo domínio, adaptadores e fluxo de autenticação.
+### 1) Registrar usuário
+
+```bash
+curl -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Bruno","email":"bruno@email.com","password":"123456"}'
+```
+### 2) Login (retorna Access Token)
+
+```bash
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"bruno@email.com","password":"123456"}'
+```
+
+## Exemplos de resposta:
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+### 3) Usar token nos endpoints protegidos
+
+```bash
+curl http://localhost:8080/categories \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+```
+
+---
 
 ## Como rodar localmente
 
-## Pré-requisitos
+### Pré-requisitos
 
 - Java 21
-- Docker (opcional, para subir PostgreSQL)
-- Maven Wrapper (`mvnw` já incluído no projeto)
+- Docker
 
-## 1) Subir banco PostgreSQL
+### Subir PostgreSQL
 
 ```bash
 docker compose up -d
 ```
 
-O `compose.yaml` sobe um PostgreSQL 16 em `localhost:5432` com:
+Configuração do compose:
 
-- database: `financeiro`
-- user: `financeiro`
-- password: `financeiro`
+- Host: `localhost:5432`
+- Database: `financeiro`
+- User: `financeiro`
+- Password: `financeiro`
 
-## 2) Executar a aplicação
+### Rodar a API
 
-No Windows:
+Windows:
 
 ```bash
 .\mvnw.cmd spring-boot:run
 ```
 
-No Linux/macOS:
+Linux/macOS:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-## 3) Acessar
+### Acessos
 
 - API: `http://localhost:8080`
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
-- Health: `http://localhost:8080/actuator/health`
+- Actuator:
+- `http://localhost:8080/actuator/health`
+- `http://localhost:8080/actuator/info`
 
-## Configuração por variáveis de ambiente
+## Configuração
 
-Valores padrão em `application.properties`:
+As propriedades podem ser definidas via `application.properties` ou variáveis de ambiente.
 
-- `DB_URL=jdbc:postgresql://localhost:5432/financeiro`
-- `DB_USER=financeiro`
-- `DB_PASSWORD=financeiro`
-- `jwt.secret` configurado localmente
-- `jwt.ttl-seconds=3600`
+Banco:
 
-## Build e testes
+- `DB_URL` (default: `jdbc:postgresql://localhost:5432/financeiro`)
+- `DB_USER` (default: `financeiro`)
+- `DB_PASSWORD` (default: `financeiro`)
+
+JWT:
+
+- `jwt.secret`
+- `jwt.ttl-seconds` (default: `3600`)
+
+## Testes e cobertura
+
+Executar testes:
 
 ```bash
 .\mvnw.cmd test
 ```
 
-Para gerar relatório de cobertura:
+Gerar relatório de cobertura (JaCoCo):
 
 ```bash
 .\mvnw.cmd -Pcoverage verify
 ```
-
-## Próximos passos naturais do projeto
-
-- Finalizar casos de uso e endpoints de transações.
-- Adicionar CRUD completo de categorias.
-- Melhorar tratamento de erros no filtro de segurança (retorno 401 consistente).
-- Evoluir observabilidade (métricas e tracing).
-- Endurecer configuração para produção (segredos e perfis).
-
