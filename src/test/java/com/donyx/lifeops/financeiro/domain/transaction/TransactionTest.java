@@ -146,11 +146,20 @@ class TransactionTest {
     @Test
     @DisplayName("settle -> lança quando já COMPLETED")
     void settle_alreadyCompleted_throws() {
-        Transaction tx = Transaction.create(OWNER, new BigDecimal("10.00"), TransactionType.EXPENSE, CREATED_AT, false);
+        Transaction tx = Transaction.create(
+                OWNER,
+                new BigDecimal("10.00"),
+                TransactionType.EXPENSE,
+                CREATED_AT,
+                false
+        );
 
         tx.settle(CREATED_DATE_UTC);
-        LocalDate dueDate = CREATED_DATE_UTC.minusDays(1);
-        assertThatThrownBy(() -> tx.settle(dueDate))
+
+        // qualquer data >= createdAt serve, o ponto é cair no "already settled"
+        LocalDate anotherValidDate = CREATED_DATE_UTC.plusDays(1);
+
+        assertThatThrownBy(() -> tx.settle(anotherValidDate))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Transaction already settled");
     }
