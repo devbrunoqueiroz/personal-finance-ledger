@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.donyx.lifeops.financeiro.application.ports.user.PasswordHasher;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
+import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
 import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.InvalidCredentialsException;
 import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.UserDeletedException;
 import com.donyx.lifeops.financeiro.domain.user.User;
@@ -25,12 +26,15 @@ class LoginUseCaseTest {
 
     private LoginUseCase useCase;
 
+    private LoginCommand command;
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
         passwordHasher = mock(PasswordHasher.class);
         tokenProvider = mock(TokenProvider.class);
         useCase = new LoginUseCase(userRepository, passwordHasher, tokenProvider);
+        command = new LoginCommand("a@b.com", "12345678");
+
     }
 
     @Test
@@ -48,7 +52,7 @@ class LoginUseCaseTest {
         when(passwordHasher.matches(rawPassword, "HASH")).thenReturn(true);
         when(tokenProvider.generateAccessToken(user)).thenReturn("token-abc");
 
-        String token = useCase.execute(email, rawPassword);
+        String token = useCase.execute(new LoginCommand(email, rawPassword));
 
         assertEquals("token-abc", token);
 
@@ -64,7 +68,7 @@ class LoginUseCaseTest {
     @DisplayName("execute -> lança InvalidCredentialsException quando email é null")
     void execute_emailNull_throws() {
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute(null, "12345678"));
+                () -> useCase.execute(new LoginCommand(null, "12345678")));
 
         verifyNoInteractions(userRepository, passwordHasher, tokenProvider);
     }
@@ -73,7 +77,7 @@ class LoginUseCaseTest {
     @DisplayName("execute -> lança InvalidCredentialsException quando password é null")
     void execute_passwordNull_throws() {
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute("a@b.com", null));
+                () -> useCase.execute(new LoginCommand("a@b.com", null)));
 
         verifyNoInteractions(userRepository, passwordHasher, tokenProvider);
     }
@@ -84,7 +88,7 @@ class LoginUseCaseTest {
         when(userRepository.findByEmail("a@b.com")).thenReturn(Optional.empty());
 
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute("a@b.com", "12345678"));
+                () -> useCase.execute(new LoginCommand("a@b.com", "12345678")));
 
         verify(userRepository).findByEmail("a@b.com");
         verifyNoMoreInteractions(userRepository);
@@ -92,14 +96,14 @@ class LoginUseCaseTest {
     }
 
     @Test
-    @DisplayName("execute -> lança UserDeletedException quando usuário está DELETED")
+    @DisplayName("execute -> lança InvalidCredentialsException quando usuário está DELETED")
     void execute_userDeleted_throws() {
         User user = mock(User.class);
         when(userRepository.findByEmail("a@b.com")).thenReturn(Optional.of(user));
         when(user.status()).thenReturn(UserStatus.DELETED);
 
-        assertThrows(UserDeletedException.class,
-                () -> useCase.execute("a@b.com", "12345678"));
+        assertThrows(InvalidCredentialsException.class,
+                () -> useCase.execute(command));
 
         verify(userRepository).findByEmail("a@b.com");
         verify(user).status();
@@ -118,7 +122,7 @@ class LoginUseCaseTest {
         when(passwordHasher.matches("wrong", "HASH")).thenReturn(false);
 
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute("a@b.com", "wrong"));
+                () -> useCase.execute(new LoginCommand("a@b.com", "wrong")));
 
         verify(userRepository).findByEmail("a@b.com");
         verify(user).status();

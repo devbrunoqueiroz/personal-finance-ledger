@@ -36,7 +36,7 @@ public class JwtTokenProviderAdapter  implements TokenProvider {
         Instant exp = now.plus(ttl);
 
         return Jwts.builder()
-                .subject(user.email())
+                .subject(user.id().asUuid().toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
                 .signWith(key, Jwts.SIG.HS256)

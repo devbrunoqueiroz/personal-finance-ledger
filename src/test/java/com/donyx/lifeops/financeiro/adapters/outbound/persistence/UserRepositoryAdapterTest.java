@@ -6,13 +6,16 @@ import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.UserPersi
 import com.donyx.lifeops.financeiro.adapters.outbound.persistence.user.UserRepositoryAdapter;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
+import com.donyx.lifeops.financeiro.domain.user.UserRole;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
+import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -139,10 +142,27 @@ class UserRepositoryAdapterTest {
     }
 
     @Test
-    @DisplayName("findByEmail -> (atual) retorna Optional.empty (teste denuncia implementação faltando)")
-    void findByEmail_currentlyEmpty() {
-        Optional<User> result = adapter.findByEmail("a@b.com");
-        assertTrue(result.isEmpty());
-        verifyNoInteractions(repository);
+    void findByEmail_returnsMappedUserWhenFound() {
+        String email = "a@b.com";
+
+        JpaUserEntity entity = new JpaUserEntity();
+        entity.setId(UUID.randomUUID());
+        entity.setName("Bruno"); // não pode ser vazio
+        entity.setEmail(email);
+        entity.setPasswordHash("hash"); // não pode ser vazio
+        entity.setStatus(UserStatus.ACTIVE);
+        entity.setCreatedAt(Instant.parse("2026-01-01T00:00:00Z"));
+        entity.setUpdatedAt(Instant.parse("2026-01-02T00:00:00Z"));
+        entity.setUpdatedBy(null);
+        entity.setRoles(Set.of(UserRole.USER)); // se existir na entidade
+
+        when(repository.findActiveByEmail(email, UserStatus.DELETED))
+                .thenReturn(Optional.of(entity));
+
+        Optional<User> result = adapter.findByEmail(email);
+
+        assertTrue(result.isPresent());
+        assertEquals(email, result.get().email());
+        verify(repository).findActiveByEmail(email, UserStatus.DELETED);
     }
 }

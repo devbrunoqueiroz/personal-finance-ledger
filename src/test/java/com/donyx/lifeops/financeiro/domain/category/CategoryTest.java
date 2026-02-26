@@ -13,7 +13,7 @@ class CategoryTest {
 
     @Test
     void shouldCreateValidCategory() {
-        Category c = new Category(CategoryId.random(), UserId.random(), "Salary", "Monthly salary", CategoryType.INCOME, Instant.now());
+        Category c = new Category(CategoryId.random(), UserId.random(), "Salary", "Monthly salary", CategoryType.INCOME, Instant.now(), Instant.now());
         assertEquals("Salary", c.name());
         assertEquals(CategoryType.INCOME, c.type());
     }
@@ -28,13 +28,13 @@ class CategoryTest {
     @Test
     void shouldThrowOnBlankName() {
         assertThrows(IllegalArgumentException.class, () ->
-            new Category(categoryId, userId, "   ", "desc", CategoryType.EXPENSE, now)
+            new Category(categoryId, userId, "   ", "desc", CategoryType.EXPENSE, now, now)
         );
     }
 
     @Test
     void shouldSetDescription() {
-        Category c = new Category(categoryId, userId, "Food", null, CategoryType.EXPENSE, now);
+        Category c = new Category(categoryId, userId, "Food", null, CategoryType.EXPENSE, now, now);
         c.setDescription("Groceries");
         assertEquals("Groceries", c.description());
     }

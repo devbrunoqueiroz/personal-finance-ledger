@@ -39,8 +39,6 @@ class RegisterUseCaseTest {
         String normalizedEmail = "a@b.com";
 
         when(userRepository.existsByEmail(normalizedEmail)).thenReturn(false);
-        when(userRepository.existsByName(name)).thenReturn(false);
-
         when(passwordHasher.hash(rawPassword)).thenReturn("HASH");
         // devolve o mesmo usuário que recebeu (pra simplificar)
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0, User.class));
@@ -54,7 +52,6 @@ class RegisterUseCaseTest {
         assertEquals("token-xyz", token);
 
         verify(userRepository).existsByEmail(normalizedEmail);
-        verify(userRepository).existsByName(name);
         verify(passwordHasher).hash(rawPassword);
         verify(userRepository).save(any(User.class));
         verify(tokenProvider).generateAccessToken(any(User.class));
@@ -94,20 +91,4 @@ class RegisterUseCaseTest {
         verifyNoInteractions(passwordHasher, tokenProvider);
     }
 
-    @Test
-    @DisplayName("execute -> lança IllegalStateException quando username já está em uso")
-    void execute_nameAlreadyInUse_throws() {
-        when(userRepository.existsByEmail("a@b.com")).thenReturn(false);
-        when(userRepository.existsByName("Bruno")).thenReturn(true);
-
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-                () -> useCase.execute("Bruno", "a@b.com", "12345678"));
-
-        assertEquals("Username already in use", ex.getMessage());
-
-        verify(userRepository).existsByEmail("a@b.com");
-        verify(userRepository).existsByName("Bruno");
-        verifyNoMoreInteractions(userRepository);
-        verifyNoInteractions(passwordHasher, tokenProvider);
-    }
 }

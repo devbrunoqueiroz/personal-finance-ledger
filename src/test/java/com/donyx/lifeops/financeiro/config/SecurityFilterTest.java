@@ -49,6 +49,7 @@ class SecurityFilterTest {
 
     @Test
     void bearerToken_valid_authenticatesUser_andContinuesChain() throws Exception {
+
         TokenProvider tokenProvider = mock(TokenProvider.class);
         UserRepository userRepository = mock(UserRepository.class);
         FilterChain chain = mock(FilterChain.class);
@@ -60,46 +61,57 @@ class SecurityFilterTest {
 
         request.addHeader("Authorization", "Bearer abc.def.ghi");
 
-        when(tokenProvider.getSubject("abc.def.ghi")).thenReturn("a@b.com");
+        UUID userId = UUID.randomUUID();
+
+        when(tokenProvider.getSubject("abc.def.ghi"))
+                .thenReturn(userId.toString());
 
         Instant now = Instant.now();
 
         User domainUser = User.rehydrate(
-                UserId.of(UUID.randomUUID()),
+                UserId.of(userId),
                 "Bruno",
                 "a@b.com",
                 "HASH",
                 null,
                 now,
-                now, // <--- não-null
                 UserStatus.ACTIVE,
                 Set.of(UserRole.USER)
         );
 
-        when(userRepository.findByEmail("a@b.com")).thenReturn(Optional.of(domainUser));
+        when(userRepository.findById(UserId.of(userId)))
+                .thenReturn(Optional.of(domainUser));
 
         filter.doFilter(request, response, chain);
 
         var auth = SecurityContextHolder.getContext().getAuthentication();
+
         assertNotNull(auth);
         assertTrue(auth instanceof UsernamePasswordAuthenticationToken);
         assertTrue(auth.isAuthenticated());
 
-        // principal é UserDetails
         Object principal = auth.getPrincipal();
         assertTrue(principal instanceof org.springframework.security.core.userdetails.User);
 
         var springUser = (org.springframework.security.core.userdetails.User) principal;
-        assertEquals("a@b.com", springUser.getUsername());
-        assertTrue(springUser.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
+
+        // AGORA username = UUID
+        assertEquals(userId.toString(), springUser.getUsername());
+
+        assertTrue(
+                springUser.getAuthorities()
+                        .stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_USER"))
+        );
 
         verify(chain).doFilter(request, response);
         verify(tokenProvider).getSubject("abc.def.ghi");
-        verify(userRepository).findByEmail("a@b.com");
+        verify(userRepository).findById(UserId.of(userId));
     }
 
     @Test
-    void bearerToken_invalid_doesNotAuthenticate_butContinuesChain() throws Exception {
+    void bearerToken_invalid_throwsException() throws Exception {
+
         TokenProvider tokenProvider = mock(TokenProvider.class);
         UserRepository userRepository = mock(UserRepository.class);
         FilterChain chain = mock(FilterChain.class);
@@ -111,14 +123,15 @@ class SecurityFilterTest {
 
         request.addHeader("Authorization", "Bearer bad");
 
-        when(tokenProvider.getSubject("bad")).thenThrow(new RuntimeException("invalid token"));
+        when(tokenProvider.getSubject("bad"))
+                .thenThrow(new RuntimeException("invalid token"));
 
-        filter.doFilter(request, response, chain);
+        assertThrows(RuntimeException.class, () ->
+                filter.doFilter(request, response, chain)
+        );
 
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(chain).doFilter(request, response);
-        verify(tokenProvider).getSubject("bad");
         verifyNoInteractions(userRepository);
+        verify(chain, never()).doFilter(request, response);
     }
 
     @Test

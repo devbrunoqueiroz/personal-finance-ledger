@@ -1,6 +1,6 @@
 package com.donyx.lifeops.financeiro.application.ports.transaction;
 
-import com.donyx.lifeops.financeiro.application.ports.common.PageRequest;
+import com.donyx.lifeops.financeiro.application.ports.common.Pagination;
 import com.donyx.lifeops.financeiro.application.ports.common.PageResult;
 import com.donyx.lifeops.financeiro.domain.transaction.Transaction;
 import com.donyx.lifeops.financeiro.domain.transaction.TransactionId;
@@ -19,13 +19,19 @@ public interface TransactionRepository {
     PageResult<Transaction> findByUser(
             UserId userId,
             TransactionQuery query,
-            PageRequest page
+            Pagination page
     );
 
     BigDecimal sumAmountByUserAndPeriod(
             UserId userId,
             LocalDate fromInclusive,
             LocalDate toInclusive
+    );
+
+    PageResult<Transaction> search(
+            UserId userId,
+            TransactionQuery query,
+            Pagination pagination
     );
 
 }

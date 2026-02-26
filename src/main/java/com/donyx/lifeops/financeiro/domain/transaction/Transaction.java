@@ -6,49 +6,60 @@ import com.donyx.lifeops.financeiro.domain.user.UserId;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 public class Transaction {
 
     private final TransactionId id;
     private final UserId ownerId;
+    private final TransactionType type;
+    private final Instant createdAt;
+
+    private BigDecimal amount;
     private String description;
     private String notes;
-    private final BigDecimal amount;
-    private final TransactionType type;
-    private TransactionStatus status;
     private LocalDate dueDate;
-    private     LocalDate settledAt;
-    private final Instant createdAt;
-    private Instant updatedAt;
+    private LocalDate settledAt;
+    private TransactionStatus status;
     private CategoryId categoryId;
 
-    public Transaction(TransactionId id, UserId ownerId, BigDecimal amount, TransactionType type, Instant createdAt) {
+    private final boolean recurring; // MVP: tag apenas
+
+    public Transaction(
+            TransactionId id,
+            UserId ownerId,
+            BigDecimal amount,
+            TransactionType type,
+            Instant createdAt,
+            boolean recurring) {
         this.id = Objects.requireNonNull(id, "TransactionId cannot be null");
         this.ownerId = Objects.requireNonNull(ownerId, "OwnerId cannot be null");
         this.amount = Objects.requireNonNull(amount, "Amount cannot be null");
+        this.recurring = recurring;
         if (amount.signum() <= 0) {
             throw new IllegalArgumentException("Amount must be positive");
         }
         this.type = Objects.requireNonNull(type, "TransactionType cannot be null");
         this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
+        this.status = TransactionStatus.PENDING;
     }
 
     public static Transaction hydrate(
             TransactionId id,
             UserId ownerId,
-            String description,
-            String notes,
             BigDecimal amount,
             TransactionType type,
-            TransactionStatus status,
+            Instant createdAt,
+            String description,
+            String notes,
             LocalDate dueDate,
             LocalDate settledAt,
+            TransactionStatus status,
             CategoryId categoryId,
-            Instant createdAt,
-            Instant updatedAt
+            boolean recurring
     ) {
-        Transaction tx = new Transaction(id, ownerId, amount, type, createdAt);
+        Transaction tx = new Transaction(id, ownerId, amount, type, createdAt, recurring);
 
         if (description != null && description.trim().isEmpty()) throw new IllegalArgumentException("Description cannot be blank");
         if (notes != null && notes.trim().isEmpty()) throw new IllegalArgumentException("Notes cannot be blank");
@@ -60,7 +71,35 @@ public class Transaction {
         tx.dueDate = dueDate;
         tx.settledAt = settledAt;
         tx.categoryId = categoryId;
-        tx.updatedAt = (updatedAt != null ? updatedAt : createdAt);
+        return tx;
+    }
+
+    public static Transaction create(
+            UserId ownerId,
+            BigDecimal amount,
+            TransactionType type,
+            Instant now,
+            boolean recurring
+    ) {
+        Objects.requireNonNull(ownerId, "ownerId");
+        Objects.requireNonNull(amount, "amount");
+        Objects.requireNonNull(type, "type");
+        Objects.requireNonNull(now, "now");
+
+        if (amount.signum() <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+
+        Transaction tx = new Transaction(
+                TransactionId.random(),
+                ownerId,
+                amount,
+                type,
+                now,
+                recurring
+        );
+
+        tx.status = TransactionStatus.PENDING;
 
         return tx;
     }
@@ -75,16 +114,23 @@ public class Transaction {
     public LocalDate dueDate() { return dueDate; }
     public LocalDate settledAt() { return settledAt; }
     public Instant createdAt() { return createdAt; }
-    public Instant updatedAt() { return updatedAt; }
     public CategoryId categoryId() { return categoryId; }
+    public boolean recurring() { return recurring; }
 
-    // Setters for mutable fields
+    public void changeAmount(BigDecimal newAmount) {
+        Objects.requireNonNull(newAmount, "amount");
+        if (newAmount.signum() <= 0) throw new IllegalArgumentException("Amount must be positive");
+        if (this.status == TransactionStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot change amount of a settled transaction");
+        }
+        this.amount = newAmount;
+    }
+
     public void setDescription(String description) {
         if (description != null && description.trim().isEmpty()) {
             throw new IllegalArgumentException("Description cannot be blank");
         }
         this.description = description;
-        this.updatedAt = Instant.now();
     }
 
     public void setNotes(String notes) {
@@ -92,35 +138,70 @@ public class Transaction {
             throw new IllegalArgumentException("Notes cannot be blank");
         }
         this.notes = notes;
-        this.updatedAt = Instant.now();
     }
 
-    public void setStatus(TransactionStatus status) {
-        if (status == null) {
-            throw new IllegalArgumentException("TransactionStatus cannot be null");
+    public void fail() {
+        if (this.status == TransactionStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot mark a completed transaction as failed");
         }
-        this.status = status;
-        this.updatedAt = Instant.now();
+        if (this.status == TransactionStatus.FAILED) return;
+        this.status = TransactionStatus.FAILED;
+        this.settledAt = null;
+    }
+
+    public void reopen() {
+        if (this.status == TransactionStatus.PENDING) return;
+        if (this.status == TransactionStatus.COMPLETED || this.status == TransactionStatus.FAILED) {
+            this.status = TransactionStatus.PENDING;
+            this.settledAt = null;
+            return;
+        }
+        throw new IllegalStateException("Only completed or failed transactions can be reopened");
+    }
+
+    public void settle(LocalDate date) {
+        Objects.requireNonNull(date, "settledAt");
+
+        LocalDate created = this.createdAt.atZone(ZoneOffset.UTC).toLocalDate();
+        if (date.isBefore(created)) {
+            throw new IllegalArgumentException("cannot settle before createdAt");
+        }
+
+        if (this.status == TransactionStatus.COMPLETED) {
+            throw new IllegalStateException("Transaction already settled");
+        }
+        if (this.status == TransactionStatus.FAILED) {
+            throw new IllegalStateException("Cannot settle a failed transaction. Reopen it first.");
+        }
+
+        this.settledAt = date;
+        this.status = TransactionStatus.COMPLETED;
+    }
+
+    public void cancel() {
+        if (this.status == TransactionStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot delete a settled transaction");
+        }
+        if (this.status == TransactionStatus.CANCELLED) return;
+        this.status = TransactionStatus.CANCELLED;
+        this.settledAt = null;
     }
 
     public void setDueDate(LocalDate dueDate) {
-        if (dueDate != null && dueDate.isBefore(createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate())) {
+        if (dueDate != null && dueDate.isBefore(createdAt.atZone(ZoneOffset.UTC).toLocalDate())) {
             throw new IllegalArgumentException("DueDate cannot be before createdAt");
         }
         this.dueDate = dueDate;
-        this.updatedAt = Instant.now();
     }
 
     public void setSettledAt(LocalDate settledAt) {
-        if (settledAt != null && settledAt.isBefore(createdAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate())) {
+        if (settledAt != null && settledAt.isBefore(createdAt.atZone(ZoneOffset.UTC).toLocalDate())) {
             throw new IllegalArgumentException("SettledAt cannot be before createdAt");
         }
         this.settledAt = settledAt;
-        this.updatedAt = Instant.now();
     }
 
     public void setCategoryId(CategoryId categoryId) {
         this.categoryId = Objects.requireNonNull(categoryId, "CategoryId cannot be null");
-        this.updatedAt = Instant.now();
     }
 }

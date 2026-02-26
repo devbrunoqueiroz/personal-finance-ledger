@@ -3,6 +3,7 @@ package com.donyx.lifeops.financeiro.domain.user;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
 
@@ -26,7 +27,8 @@ class UserTest {
             "hash",
             null,
             UserStatus.ACTIVE,
-            Collections.singleton(UserRole.USER)
+            Collections.singleton(UserRole.USER),
+            Instant.now()
         );
         assertEquals("Test User", user.name());
         assertEquals("test@email.com", user.email());
@@ -44,7 +46,7 @@ class UserTest {
                 "hash",
                 null,
                 UserStatus.ACTIVE,
-                roles
+                roles, Instant.now()
             )
         );
     }
@@ -59,7 +61,7 @@ class UserTest {
                 "hash",
                 null,
                 UserStatus.ACTIVE,
-                roles
+                roles, Instant.now()
             )
         );
     }

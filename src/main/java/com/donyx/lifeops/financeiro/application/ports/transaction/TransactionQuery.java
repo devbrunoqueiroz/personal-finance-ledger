@@ -16,6 +16,6 @@ public record TransactionQuery(
         LocalDate settledFrom,
         LocalDate settledTo,
         TransactionType type,
-        TransactionStatus status,   // <-- aqui
+        TransactionStatus status,
         CategoryId categoryId
 ) {}

@@ -19,7 +19,6 @@ public final class UserPersistenceMapper {
         e.setRoles(user.roles());
 
         e.setCreatedAt(user.createdAt());
-        e.setUpdatedAt(user.updatedAt());
 
         e.setUpdatedBy(
                 user.updatedBy() != null
@@ -40,7 +39,6 @@ public final class UserPersistenceMapper {
                         ? UserId.of(e.getUpdatedBy())
                         : null,
                 e.getCreatedAt(),
-                e.getUpdatedAt(),
                 e.getStatus(),
                 e.getRoles()
         );
