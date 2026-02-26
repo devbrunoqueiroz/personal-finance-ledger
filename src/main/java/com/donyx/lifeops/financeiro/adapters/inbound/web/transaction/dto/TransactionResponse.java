@@ -11,7 +11,6 @@ import java.util.UUID;
 
 public record TransactionResponse(
         UUID id,
-        UUID ownerId,
         BigDecimal amount,
         TransactionType type,
         TransactionStatus status,
@@ -21,14 +20,12 @@ public record TransactionResponse(
         LocalDate settledAt,
         UUID categoryId,
         boolean recurring,
-        Instant createdAt,
-        Instant updatedAt
+        Instant createdAt
 ) {
 
     public static TransactionResponse fromDomain(Transaction tx){
         return new TransactionResponse(
                 tx.id().asUuid(),
-                tx.ownerId().asUuid(),
                 tx.amount(),
                 tx.type(),
                 tx.status(),
@@ -38,8 +35,7 @@ public record TransactionResponse(
                 tx.settledAt(),
                 tx.categoryId() != null ? tx.categoryId().asUuid() : null,
                 tx.recurring(),
-                tx.createdAt(),
-                Instant.now()
+                tx.createdAt()
         );
     }
 }

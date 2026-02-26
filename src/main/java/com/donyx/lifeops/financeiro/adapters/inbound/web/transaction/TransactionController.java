@@ -1,17 +1,16 @@
 package com.donyx.lifeops.financeiro.adapters.inbound.web.transaction;
 
-import com.donyx.lifeops.financeiro.adapters.inbound.web.transaction.dto.CreateTransactionRequest;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.transaction.dto.TransactionResponse;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.transaction.dto.*;
 import com.donyx.lifeops.financeiro.application.ports.common.PageResult;
-import com.donyx.lifeops.financeiro.application.usecases.transaction.CreateTransactionUseCase;
-import com.donyx.lifeops.financeiro.application.usecases.transaction.SearchTransactionsUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.*;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.command.UpdateTransactionCommand;
+import com.donyx.lifeops.financeiro.domain.transaction.TransactionId;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import com.donyx.lifeops.financeiro.adapters.inbound.web.transaction.dto.PaginationResponse;
 import com.donyx.lifeops.financeiro.application.ports.common.Pagination;
 import com.donyx.lifeops.financeiro.application.ports.common.Pagination.Sort.Direction;
 import com.donyx.lifeops.financeiro.application.ports.transaction.TransactionQuery;
@@ -22,8 +21,8 @@ import com.donyx.lifeops.financeiro.domain.transaction.TransactionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/transactions")
@@ -31,16 +30,23 @@ public class TransactionController {
 
     private final CreateTransactionUseCase createTransaction;
     private final SearchTransactionsUseCase searchTransactionsUseCase;
+    private final UpdateTransactionUsecase updateTransactionUseCase;
+    private final SettleTransactionUseCase settleTransactionUseCase;
+    private final CancelTransactionUseCase cancelTransactionUseCase;
 
-    public TransactionController(CreateTransactionUseCase createTransaction, SearchTransactionsUseCase searchTransactionsUseCase) {
+    public TransactionController(CreateTransactionUseCase createTransaction, SearchTransactionsUseCase searchTransactionsUseCase, UpdateTransactionUsecase updateTransactionUseCase, SettleTransactionUseCase settleTransactionUseCase, CancelTransactionUseCase cancelTransactionUseCase) {
         this.createTransaction = createTransaction;
         this.searchTransactionsUseCase = searchTransactionsUseCase;
+        this.updateTransactionUseCase = updateTransactionUseCase;
+        this.settleTransactionUseCase = settleTransactionUseCase;
+        this.cancelTransactionUseCase = cancelTransactionUseCase;
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<TransactionResponse> create(@Valid @RequestBody CreateTransactionRequest req, Authentication authentication) {
-        UUID userId = UUID.fromString(authentication.getName());
+    public ResponseEntity<TransactionResponse> create(
+            @Valid @RequestBody CreateTransactionRequest req,
+            Authentication auth) {
+        UserId userId = currentUser(auth);
 
         var tx = createTransaction.execute(TransactionInboundMapper.toCommand(req, userId));
 
@@ -66,7 +72,7 @@ public class TransactionController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) List<String> sort
     ) {
-        UserId ownerId = UserId.of(UUID.fromString(auth.getName()));
+        UserId userId = currentUser(auth);
 
         TransactionQuery query = new TransactionQuery(
                 text,
@@ -86,7 +92,7 @@ public class TransactionController {
                 new Pagination(page, size, parseSorts(sort));
 
         PageResult<Transaction> result =
-                searchTransactionsUseCase.execute(ownerId, query, pageRequest);
+                searchTransactionsUseCase.execute(userId, query, pageRequest);
 
         return ResponseEntity.ok(
                 new PaginationResponse<>(
@@ -101,10 +107,57 @@ public class TransactionController {
         );
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<TransactionResponse> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateTransactionRequest req,
+            Authentication auth
+    ) {
+        UserId userId = currentUser(auth);
+
+        UpdateTransactionCommand cmd = TransactionInboundMapper.toUpdateCommand(id, req, userId);
+
+        var transaction = updateTransactionUseCase.execute(cmd);
+        TransactionResponse txResponse = TransactionResponse.fromDomain(transaction);
+        return ResponseEntity.ok(txResponse);
+    }
+
+    @PostMapping("/{id}/settle")
+    public ResponseEntity<Void> settle(
+            @PathVariable UUID id,
+            @RequestBody(required = false) SettleTransactionRequest req,
+            Authentication auth
+    ) {
+        UserId userId = currentUser(auth);
+
+        LocalDate settledAt = (req != null && req.settledAt() != null)
+                ? req.settledAt()
+                : LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+
+        settleTransactionUseCase.execute(TransactionId.of(id), userId, settledAt);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancel(
+            @PathVariable UUID id,
+            Authentication auth
+    ) {
+        UserId userId = currentUser(auth);
+
+        cancelTransactionUseCase.execute(TransactionId.of(id), userId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    private static UserId currentUser(Authentication auth) {
+        return UserId.of(UUID.fromString(auth.getName()));
+    }
+
     private static List<Pagination.Sort> parseSorts(List<String> sortParams) {
         if (sortParams == null || sortParams.isEmpty()) return List.of();
 
-        // Aceita: ?sort=dueDate,desc&sort=amount,asc
         List<Pagination.Sort> out = new ArrayList<>();
         for (String s : sortParams) {
             if (s == null || s.isBlank()) continue;

@@ -1,14 +1,17 @@
 package com.donyx.lifeops.financeiro.adapters.inbound.web.transaction;
 import com.donyx.lifeops.financeiro.adapters.inbound.web.transaction.dto.CreateTransactionRequest;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.transaction.dto.SettleTransactionRequest;
+import com.donyx.lifeops.financeiro.adapters.inbound.web.transaction.dto.UpdateTransactionRequest;
 import com.donyx.lifeops.financeiro.application.ports.common.PageResult;
 import com.donyx.lifeops.financeiro.application.ports.common.Pagination;
 import com.donyx.lifeops.financeiro.application.ports.transaction.TransactionQuery;
-import com.donyx.lifeops.financeiro.application.usecases.transaction.CreateTransactionUseCase;
-import com.donyx.lifeops.financeiro.application.usecases.transaction.SearchTransactionsUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.*;
 import com.donyx.lifeops.financeiro.application.usecases.transaction.command.CreateTransactionCommand;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.command.UpdateTransactionCommand;
 import com.donyx.lifeops.financeiro.config.SecurityFilter;
 import com.donyx.lifeops.financeiro.domain.category.CategoryId;
 import com.donyx.lifeops.financeiro.domain.transaction.Transaction;
+import com.donyx.lifeops.financeiro.domain.transaction.TransactionId;
 import com.donyx.lifeops.financeiro.domain.transaction.TransactionStatus;
 import com.donyx.lifeops.financeiro.domain.transaction.TransactionType;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
@@ -28,16 +31,16 @@ import org.springframework.security.test.context.support.WithMockUser;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(
@@ -62,6 +65,15 @@ class TransactionControllerTest {
     @MockitoBean
     SearchTransactionsUseCase searchTransactionsUseCase;
 
+    @MockitoBean
+    UpdateTransactionUsecase updateTransactionUseCase;
+
+    @MockitoBean
+    SettleTransactionUseCase settleTransactionUseCase;
+
+    @MockitoBean
+    CancelTransactionUseCase cancelTransactionUseCase;
+
     @Test
     @DisplayName("POST /transactions - should create a new transaction and return 201")
     @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
@@ -81,7 +93,7 @@ class TransactionControllerTest {
 
         var tx = buildTransaction(UserId.of("550e8400-e29b-41d4-a716-446655440000"),
                 new BigDecimal("100.00"),
-                TransactionType.EXPENSE,
+                TransactionType.INCOME,
                 "Test Transaction",
                 "Test Notes");
 
@@ -103,7 +115,6 @@ class TransactionControllerTest {
         UUID ownerUuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         UserId ownerId = UserId.of(ownerUuid);
 
-        // Monta duas transactions do domínio (ADAPTA pro teu construtor/factory real)
         Transaction tx1 = buildTransaction(ownerId, new BigDecimal("100.00"), TransactionType.EXPENSE, "Coffee", "Notes 1");
         Transaction tx2 = buildTransaction(ownerId, new BigDecimal("250.00"), TransactionType.EXPENSE, "Market", "Notes 2");
 
@@ -143,7 +154,6 @@ class TransactionControllerTest {
                 .andExpect(jsonPath("$.totalPages").value(1))
                 .andExpect(jsonPath("$.content.length()").value(2));
 
-        // Captura e valida os argumentos gerados pelo controller (pra garantir que parseSorts e query montaram certo)
         ArgumentCaptor<UserId> ownerCaptor = ArgumentCaptor.forClass(UserId.class);
         ArgumentCaptor<TransactionQuery> queryCaptor = ArgumentCaptor.forClass(TransactionQuery.class);
         ArgumentCaptor<Pagination> paginationCaptor = ArgumentCaptor.forClass(Pagination.class);
@@ -162,7 +172,7 @@ class TransactionControllerTest {
         assertThat(q.settledTo()).isEqualTo(LocalDate.parse("2026-03-31"));
         assertThat(q.type()).isEqualTo(TransactionType.EXPENSE);
         assertThat(q.status()).isEqualTo(TransactionStatus.PENDING);
-        // categoryId foi enviado; aqui só checa se não veio null
+
         assertThat(q.categoryId()).isNotNull();
 
         Pagination p = paginationCaptor.getValue();
@@ -177,8 +187,6 @@ class TransactionControllerTest {
 
 
     private static Transaction buildTransaction(UserId ownerId, BigDecimal amount, TransactionType type, String description, String notes) {
-        // Se você tiver Transaction.create(...), usa ela.
-        // Exemplo "genérico" (troca pelos campos reais):
         Transaction tx = Transaction.create(
                 ownerId,
                 amount,
@@ -189,5 +197,158 @@ class TransactionControllerTest {
         tx.setDescription(description);
         tx.setNotes(notes);
         return tx;
+    }
+
+    @Test
+    @DisplayName("PATCH /transactions/{id} -> 200 e chama usecase com command correto")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
+    void update_ok_returns200_andCallsUseCase() throws Exception {
+        UUID txId = TransactionId.random().asUuid();
+        UUID categoryId = CategoryId.random().asUuid();
+
+        var req = new UpdateTransactionRequest(
+                "New desc",
+                "New notes",
+                new BigDecimal("123.45"),
+                TransactionType.EXPENSE,
+                LocalDate.of(2026, 3, 10),
+                categoryId,
+                Boolean.TRUE
+        );
+
+        Transaction domainTx = Transaction.hydrate(
+                TransactionId.of(txId),
+                UserId.random(),
+                new BigDecimal("123.45"),
+                TransactionType.EXPENSE,
+                Instant.parse("2026-02-20T10:00:00Z"),
+                "New desc",
+                "New notes",
+                LocalDate.of(2026, 3, 10),
+                null,
+                TransactionStatus.PENDING,
+                CategoryId.of(categoryId),
+                true
+        );
+
+        when(updateTransactionUseCase.execute(any(UpdateTransactionCommand.class)))
+                .thenReturn(domainTx);
+
+        mockMvc.perform(patch("/transactions/{id}", txId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(txId.toString()))
+                .andExpect(jsonPath("$.amount").value(123.45))
+                .andExpect(jsonPath("$.type").value("EXPENSE"))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.description").value("New desc"))
+                .andExpect(jsonPath("$.notes").value("New notes"))
+                .andExpect(jsonPath("$.dueDate").value("2026-03-10"))
+                .andExpect(jsonPath("$.categoryId").value(categoryId.toString()))
+                .andExpect(jsonPath("$.recurring").value(true));
+
+        ArgumentCaptor<UpdateTransactionCommand> captor = ArgumentCaptor.forClass(UpdateTransactionCommand.class);
+        verify(updateTransactionUseCase).execute(captor.capture());
+
+        UpdateTransactionCommand cmd = captor.getValue();
+        assertThat(cmd.transactionId()).isEqualTo(TransactionId.of(txId));
+        assertThat(cmd.ownerId()).isEqualTo(UserId.of(UUID.fromString("550e8400-e29b-41d4-a716-446655440000")));
+        assertThat(cmd.description()).isEqualTo("New desc");
+        assertThat(cmd.notes()).isEqualTo("New notes");
+        assertThat(cmd.amount()).isEqualByComparingTo("123.45");
+        assertThat(cmd.type()).isEqualTo(TransactionType.EXPENSE);
+        assertThat(cmd.dueDate()).isEqualTo(LocalDate.of(2026, 3, 10));
+        assertThat(cmd.categoryId()).isEqualTo(CategoryId.of(categoryId));
+        assertThat(cmd.recurring()).isTrue();
+    }
+
+    @Test
+    @DisplayName("POST /transactions/{id}/settle -> 204 e chama usecase com settledAt do body")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
+    void settle_withBody_usesBodyDate() throws Exception {
+        UUID txId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+
+        var req = new SettleTransactionRequest(LocalDate.of(2026, 2, 26));
+
+        mockMvc.perform(post("/transactions/{id}/settle", txId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req))
+                        .with(csrf()))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(settleTransactionUseCase).execute(
+                TransactionId.of(txId),
+                UserId.of("550e8400-e29b-41d4-a716-446655440000"),
+                LocalDate.of(2026, 2, 26)
+        );
+    }
+
+    @Test
+    @DisplayName("POST /transactions/{id}/settle -> 204 e usa LocalDate.now(America/Sao_Paulo) quando body é null")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
+    void settle_withoutBody_usesNowFromSaoPaulo() throws Exception {
+        UUID txId = TransactionId.random().asUuid();
+
+        // capturamos a data passada, porque "now" não dá pra fixar sem Clock
+        ArgumentCaptor<LocalDate> dateCaptor = ArgumentCaptor.forClass(LocalDate.class);
+
+        mockMvc.perform(post("/transactions/{id}/settle", txId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        verify(settleTransactionUseCase).execute(
+                eq(TransactionId.of(txId)),
+                eq(UserId.of(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"))),
+                dateCaptor.capture()
+        );
+
+        LocalDate expected = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+        assertThat(dateCaptor.getValue()).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("DELETE /transactions/{id} -> 204 e chama cancel usecase com ids corretos")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
+    void cancel_returns204_andCallsUseCase() throws Exception {
+        UUID txId = TransactionId.random().asUuid();
+
+        mockMvc.perform(delete("/transactions/{id}", txId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(cancelTransactionUseCase).execute(
+                TransactionId.of(txId),
+                UserId.of(UUID.fromString("550e8400-e29b-41d4-a716-446655440000"))
+        );
+    }
+
+    @Test
+    @DisplayName("PATCH /transactions/{id} -> 400 quando request falha validação (ex: amount 0)")
+    @WithMockUser(username = "550e8400-e29b-41d4-a716-446655440000")
+    void update_invalidRequest_returns400() throws Exception {
+        UUID txId = TransactionId.random().asUuid();
+
+        var req = new UpdateTransactionRequest(
+                "New desc",
+                null,
+                new BigDecimal("0.00"),
+                null,
+                null,
+                null,
+                null
+        );
+
+        mockMvc.perform(patch("/transactions/{id}", txId)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(updateTransactionUseCase);
     }
 }
