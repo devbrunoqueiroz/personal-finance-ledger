@@ -38,6 +38,7 @@ class UserTest {
 
     @Test
     void shouldThrowOnInvalidEmail() {
+        var now = Instant.now();
         assertThrows(IllegalArgumentException.class, () ->
             new User(
                 userId,
@@ -46,13 +47,14 @@ class UserTest {
                 "hash",
                 null,
                 UserStatus.ACTIVE,
-                roles, Instant.now()
+                roles, now
             )
         );
     }
 
     @Test
     void shouldThrowOnNullName() {
+        var now = Instant.now();
         assertThrows(NullPointerException.class, () ->
             new User(
                 userId,
@@ -61,7 +63,7 @@ class UserTest {
                 "hash",
                 null,
                 UserStatus.ACTIVE,
-                roles, Instant.now()
+                roles, now
             )
         );
     }

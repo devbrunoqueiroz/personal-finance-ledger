@@ -1,11 +1,8 @@
 package com.donyx.lifeops.financeiro.application.usecases.category;
 
-import com.donyx.lifeops.financeiro.adapters.outbound.persistence.category.CategoryJpaRepository;
 import com.donyx.lifeops.financeiro.application.ports.category.CategoryRepository;
 import com.donyx.lifeops.financeiro.domain.category.CategoryId;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
-
-import java.util.UUID;
 
 public class DeleteCategoryUseCase {
 
