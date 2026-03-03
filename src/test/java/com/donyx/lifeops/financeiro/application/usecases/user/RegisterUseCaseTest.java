@@ -3,6 +3,7 @@ package com.donyx.lifeops.financeiro.application.usecases.user;
 import com.donyx.lifeops.financeiro.application.ports.user.PasswordHasher;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
+import com.donyx.lifeops.financeiro.application.usecases.exceptions.EmailAlreadyInUseException;
 import com.donyx.lifeops.financeiro.application.usecases.exceptions.InvalidCredentialsException;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,14 +78,14 @@ class RegisterUseCaseTest {
     }
 
     @Test
-    @DisplayName("execute -> lança IllegalStateException quando email já está em uso (checando email normalizado)")
+    @DisplayName("execute -> lança EmailAlreadyInUseException quando email já está em uso (checando email normalizado)")
     void execute_emailAlreadyInUse_throws() {
         when(userRepository.existsByEmail("a@b.com")).thenReturn(true);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        EmailAlreadyInUseException ex = assertThrows(EmailAlreadyInUseException.class,
                 () -> useCase.execute("Bruno", " A@B.COM ", "12345678"));
 
-        assertEquals("Email already in use", ex.getMessage());
+        assertEquals("The email A@B.COM is already in use.", ex.getMessage());
 
         verify(userRepository).existsByEmail("a@b.com");
         verifyNoMoreInteractions(userRepository);
