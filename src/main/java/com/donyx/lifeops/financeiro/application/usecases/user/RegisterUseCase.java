@@ -3,7 +3,8 @@ package com.donyx.lifeops.financeiro.application.usecases.user;
 import com.donyx.lifeops.financeiro.application.ports.user.PasswordHasher;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
-import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.InvalidCredentialsException;
+import com.donyx.lifeops.financeiro.application.usecases.exceptions.InvalidCredentialsException;
+import com.donyx.lifeops.financeiro.application.usecases.exceptions.EmailAlreadyInUseException;
 import com.donyx.lifeops.financeiro.domain.user.User;
 
 
@@ -27,7 +28,7 @@ public class RegisterUseCase {
         String normalizedEmail = email.trim().toLowerCase();
 
         if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new IllegalStateException("Email already in use");
+            throw new EmailAlreadyInUseException(email);
         }
 
         String hashedPassword = passwordHasher.hash(rawPassword);

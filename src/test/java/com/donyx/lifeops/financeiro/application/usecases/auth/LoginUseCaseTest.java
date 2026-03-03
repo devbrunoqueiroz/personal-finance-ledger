@@ -6,7 +6,7 @@ import com.donyx.lifeops.financeiro.application.ports.user.PasswordHasher;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
 import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
-import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.InvalidCredentialsException;
+import com.donyx.lifeops.financeiro.application.usecases.exceptions.InvalidCredentialsException;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
