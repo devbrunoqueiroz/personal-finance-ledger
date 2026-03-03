@@ -1,5 +1,7 @@
 package com.donyx.lifeops.financeiro.domain.user;
 
+import com.donyx.lifeops.financeiro.domain.common.exception.DomainRuleViolationException;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,9 +34,9 @@ public final class User {
         this.createdAt = createdAt;
         this.status = status == null ? UserStatus.ACTIVE    : status;
         this.roles = roles == null ? Collections.singleton(UserRole.USER) : Collections.unmodifiableSet(new HashSet<>(roles));
-        if (this.name.isEmpty()) throw new IllegalArgumentException("Nome não pode ser vazio");
-        if (this.email.isEmpty() || !email.contains("@")) throw new IllegalArgumentException("Email inválido");
-        if (this.passwordHash.isEmpty()) throw new IllegalArgumentException("Senha não pode ser vazia");
+        if (this.name.isEmpty()) throw new DomainRuleViolationException("Nome não pode ser vazio");
+        if (this.email.isEmpty() || !email.contains("@")) throw new DomainRuleViolationException("Email inválido");
+        if (this.passwordHash.isEmpty()) throw new DomainRuleViolationException("Senha não pode ser vazia");
     }
 
     private User(UserId id,
@@ -57,8 +59,8 @@ public final class User {
         this.status = status == null ? UserStatus.ACTIVE : status;
         this.roles = roles == null ? Set.of(UserRole.USER) : Set.copyOf(roles);
 
-        if (this.name.isBlank()) throw new IllegalArgumentException("Nome não pode ser vazio");
-        if (!this.email.contains("@")) throw new IllegalArgumentException("Email inválido");
+        if (this.name.isBlank()) throw new DomainRuleViolationException("Nome não pode ser vazio");
+        if (!this.email.contains("@")) throw new DomainRuleViolationException("Email inválido");
     }
 
     public static User rehydrate(
@@ -118,7 +120,7 @@ public final class User {
 
     public void setName(String name) {
         this.name = Objects.requireNonNull(name, "name").trim();
-        if (this.name.isEmpty()) throw new IllegalArgumentException("Nome não pode ser vazio");
+        if (this.name.isEmpty()) throw new DomainRuleViolationException("Nome não pode ser vazio");
     }
 
     public void setUpdatedBy(UserId updatedBy) {

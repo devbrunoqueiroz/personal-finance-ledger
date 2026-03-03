@@ -1,6 +1,7 @@
 package com.donyx.lifeops.financeiro.application.usecases.transaction;
 
 import com.donyx.lifeops.financeiro.application.ports.transaction.TransactionRepository;
+import com.donyx.lifeops.financeiro.application.usecases.exceptions.TransactionNotFoundException;
 import com.donyx.lifeops.financeiro.application.usecases.transaction.command.UpdateTransactionCommand;
 import com.donyx.lifeops.financeiro.domain.transaction.Transaction;
 
@@ -14,7 +15,7 @@ public class UpdateTransactionUsecase {
 
     public Transaction execute(UpdateTransactionCommand command) {
         var tx = transactionRepository.findById(command.transactionId())
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+                .orElseThrow(TransactionNotFoundException::new);
 
         if (command.amount() != null) tx.changeAmount(command.amount());
         if (command.description() != null) tx.setDescription(command.description());

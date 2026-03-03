@@ -1,6 +1,10 @@
 package com.donyx.lifeops.financeiro.domain.transaction;
 
 import com.donyx.lifeops.financeiro.domain.category.CategoryId;
+import com.donyx.lifeops.financeiro.domain.common.exception.DomainRuleViolationException;
+import com.donyx.lifeops.financeiro.domain.transaction.exception.TransactionAlreadyClosedException;
+import com.donyx.lifeops.financeiro.domain.transaction.exception.TransactionAlreadySettledException;
+import com.donyx.lifeops.financeiro.domain.transaction.exception.TransactionSettledException;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -160,8 +164,8 @@ class TransactionTest {
         LocalDate anotherValidDate = CREATED_DATE_UTC.plusDays(1);
 
         assertThatThrownBy(() -> tx.settle(anotherValidDate))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Transaction already settled");
+                .isInstanceOf(TransactionAlreadySettledException.class)
+                .hasMessageContaining("Transaction is already settled.");
     }
 
     @Test
@@ -173,7 +177,7 @@ class TransactionTest {
         assertThat(tx.status()).isEqualTo(TransactionStatus.FAILED);
 
         assertThatThrownBy(() -> tx.settle(CREATED_DATE_UTC))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(TransactionAlreadyClosedException.class)
                 .hasMessageContaining("Cannot settle a failed transaction");
     }
 
@@ -269,7 +273,7 @@ class TransactionTest {
         tx.settle(CREATED_DATE_UTC);
 
         assertThatThrownBy(tx::cancel)
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(TransactionSettledException.class)
                 .hasMessageContaining("Cannot delete a settled transaction");
     }
 
@@ -279,8 +283,8 @@ class TransactionTest {
         Transaction tx = Transaction.create(OWNER, new BigDecimal("10.00"), TransactionType.EXPENSE, CREATED_AT, false);
         LocalDate dueDate = CREATED_DATE_UTC.minusDays(1);
         assertThatThrownBy(() -> tx.setDueDate(dueDate))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("DueDate cannot be before createdAt");
+                .isInstanceOf(DomainRuleViolationException.class)
+                .hasMessageContaining("dueDate cannot be before createdAt");
     }
 
     @Test
@@ -289,8 +293,8 @@ class TransactionTest {
         Transaction tx = Transaction.create(OWNER, new BigDecimal("10.00"), TransactionType.EXPENSE, CREATED_AT, false);
         LocalDate dueDate = CREATED_DATE_UTC.minusDays(1);
         assertThatThrownBy(() -> tx.setSettledAt(dueDate))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("SettledAt cannot be before createdAt");
+                .isInstanceOf(DomainRuleViolationException.class)
+                .hasMessageContaining("settledAt cannot be before createdAt");
     }
 
     @Test

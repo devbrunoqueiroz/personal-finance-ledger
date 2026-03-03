@@ -17,7 +17,11 @@ import com.donyx.lifeops.financeiro.application.usecases.category.CreateCategory
 import com.donyx.lifeops.financeiro.application.usecases.category.DeleteCategoryUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.category.GetCategoryByIdUseCase;
 import com.donyx.lifeops.financeiro.application.usecases.category.ListCategoriesUseCase;
-import com.donyx.lifeops.financeiro.application.usecases.transaction.*;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.CancelTransactionUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.CreateTransactionUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.SearchTransactionsUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.SettleTransactionUseCase;
+import com.donyx.lifeops.financeiro.application.usecases.transaction.UpdateTransactionUsecase;
 import com.donyx.lifeops.financeiro.application.usecases.user.RegisterUseCase;
 
 import org.springframework.context.annotation.Bean;

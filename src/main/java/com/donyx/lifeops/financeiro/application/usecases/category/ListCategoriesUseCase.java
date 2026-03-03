@@ -5,7 +5,6 @@ import com.donyx.lifeops.financeiro.domain.category.Category;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 
 import java.util.List;
-import java.util.UUID;
 
 public class ListCategoriesUseCase {
 

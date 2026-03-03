@@ -44,7 +44,7 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
     public void deleteByIdAndOwnerId(CategoryId id, UserId ownerId) {
         long deleted = repository.deleteByIdAndOwnerId(id.asUuid(), ownerId.asUuid());
         if (deleted == 0) {
-            throw new RuntimeException("Category not found or does not belong to the user");
+            throw new IllegalStateException("Category not found or does not belong to the user");
         }
     }
 

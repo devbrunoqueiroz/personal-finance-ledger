@@ -1,5 +1,6 @@
 package com.donyx.lifeops.financeiro.domain.user;
 
+import com.donyx.lifeops.financeiro.domain.common.exception.DomainRuleViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +39,8 @@ class UserTest {
 
     @Test
     void shouldThrowOnInvalidEmail() {
-        assertThrows(IllegalArgumentException.class, () ->
+        var now = Instant.now();
+        assertThrows(DomainRuleViolationException.class, () ->
             new User(
                 userId,
                 "Test User",
@@ -46,13 +48,14 @@ class UserTest {
                 "hash",
                 null,
                 UserStatus.ACTIVE,
-                roles, Instant.now()
+                roles, now
             )
         );
     }
 
     @Test
     void shouldThrowOnNullName() {
+        var now = Instant.now();
         assertThrows(NullPointerException.class, () ->
             new User(
                 userId,
@@ -61,7 +64,7 @@ class UserTest {
                 "hash",
                 null,
                 UserStatus.ACTIVE,
-                roles, Instant.now()
+                roles, now
             )
         );
     }

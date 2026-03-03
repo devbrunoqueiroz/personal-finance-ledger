@@ -6,8 +6,7 @@ import com.donyx.lifeops.financeiro.application.ports.user.PasswordHasher;
 import com.donyx.lifeops.financeiro.application.ports.user.TokenProvider;
 import com.donyx.lifeops.financeiro.application.ports.user.UserRepository;
 import com.donyx.lifeops.financeiro.application.usecases.auth.command.LoginCommand;
-import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.InvalidCredentialsException;
-import com.donyx.lifeops.financeiro.application.usecases.auth.exceptions.UserDeletedException;
+import com.donyx.lifeops.financeiro.application.usecases.exceptions.InvalidCredentialsException;
 import com.donyx.lifeops.financeiro.domain.user.User;
 import com.donyx.lifeops.financeiro.domain.user.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,8 +66,9 @@ class LoginUseCaseTest {
     @Test
     @DisplayName("execute -> lança InvalidCredentialsException quando email é null")
     void execute_emailNull_throws() {
+        LoginCommand nullEmailCommand = new LoginCommand(null, "12345678");
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute(new LoginCommand(null, "12345678")));
+                () -> useCase.execute(nullEmailCommand));
 
         verifyNoInteractions(userRepository, passwordHasher, tokenProvider);
     }
@@ -76,8 +76,9 @@ class LoginUseCaseTest {
     @Test
     @DisplayName("execute -> lança InvalidCredentialsException quando password é null")
     void execute_passwordNull_throws() {
+        LoginCommand nullPWCommand = new LoginCommand("a@b.com", null);
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute(new LoginCommand("a@b.com", null)));
+                () -> useCase.execute(nullPWCommand));
 
         verifyNoInteractions(userRepository, passwordHasher, tokenProvider);
     }
@@ -86,9 +87,9 @@ class LoginUseCaseTest {
     @DisplayName("execute -> lança InvalidCredentialsException quando usuário não existe")
     void execute_userNotFound_throws() {
         when(userRepository.findByEmail("a@b.com")).thenReturn(Optional.empty());
-
+        LoginCommand invalidCommand = new LoginCommand("a@b.com", "12345678");
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute(new LoginCommand("a@b.com", "12345678")));
+                () -> useCase.execute(invalidCommand));
 
         verify(userRepository).findByEmail("a@b.com");
         verifyNoMoreInteractions(userRepository);
@@ -121,8 +122,9 @@ class LoginUseCaseTest {
 
         when(passwordHasher.matches("wrong", "HASH")).thenReturn(false);
 
+        LoginCommand wrongCommand = new LoginCommand("a@b.com", "wrong");
         assertThrows(InvalidCredentialsException.class,
-                () -> useCase.execute(new LoginCommand("a@b.com", "wrong")));
+                () -> useCase.execute(wrongCommand));
 
         verify(userRepository).findByEmail("a@b.com");
         verify(user).status();

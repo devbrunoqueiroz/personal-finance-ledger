@@ -1,6 +1,10 @@
 package com.donyx.lifeops.financeiro.domain.transaction;
 
 import com.donyx.lifeops.financeiro.domain.category.CategoryId;
+import com.donyx.lifeops.financeiro.domain.common.exception.DomainRuleViolationException;
+import com.donyx.lifeops.financeiro.domain.transaction.exception.TransactionAlreadyClosedException;
+import com.donyx.lifeops.financeiro.domain.transaction.exception.TransactionAlreadySettledException;
+import com.donyx.lifeops.financeiro.domain.transaction.exception.TransactionSettledException;
 import com.donyx.lifeops.financeiro.domain.user.UserId;
 
 import java.math.BigDecimal;
@@ -168,10 +172,10 @@ public class Transaction {
         }
 
         if (this.status == TransactionStatus.COMPLETED) {
-            throw new IllegalStateException("Transaction already settled");
+            throw new TransactionAlreadySettledException();
         }
         if (this.status == TransactionStatus.FAILED) {
-            throw new IllegalStateException("Cannot settle a failed transaction. Reopen it first.");
+            throw new TransactionAlreadyClosedException();
         }
 
         this.settledAt = date;
@@ -180,7 +184,7 @@ public class Transaction {
 
     public void cancel() {
         if (this.status == TransactionStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot delete a settled transaction");
+            throw new TransactionSettledException();
         }
         if (this.status == TransactionStatus.CANCELLED) return;
         this.status = TransactionStatus.CANCELLED;
@@ -188,20 +192,24 @@ public class Transaction {
     }
 
     public void setDueDate(LocalDate dueDate) {
-        if (dueDate != null && dueDate.isBefore(createdAt.atZone(ZoneOffset.UTC).toLocalDate())) {
-            throw new IllegalArgumentException("DueDate cannot be before createdAt");
-        }
+        validateNotBeforeCreatedAt(dueDate, "dueDate");
         this.dueDate = dueDate;
     }
 
     public void setSettledAt(LocalDate settledAt) {
-        if (settledAt != null && settledAt.isBefore(createdAt.atZone(ZoneOffset.UTC).toLocalDate())) {
-            throw new IllegalArgumentException("SettledAt cannot be before createdAt");
-        }
+        validateNotBeforeCreatedAt(settledAt, "settledAt");
         this.settledAt = settledAt;
     }
 
     public void setCategoryId(CategoryId categoryId) {
         this.categoryId = Objects.requireNonNull(categoryId, "CategoryId cannot be null");
+    }
+
+    private void validateNotBeforeCreatedAt(LocalDate date, String fieldName) {
+        if (date != null && date.isBefore(createdAt.atZone(ZoneOffset.UTC).toLocalDate())) {
+            throw new DomainRuleViolationException(
+                    fieldName + " cannot be before createdAt"
+            );
+        }
     }
 }
